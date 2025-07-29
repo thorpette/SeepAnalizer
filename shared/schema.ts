@@ -171,6 +171,107 @@ export const storyAnalyses = pgTable("story_analyses", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Learning paths for gamified web optimization
+export const learningPaths = pgTable("learning_paths", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  difficulty: text("difficulty").notNull().default("beginner"), // 'beginner', 'intermediate', 'advanced'
+  estimatedDuration: integer("estimated_duration"), // in hours
+  totalLevels: integer("total_levels").notNull().default(1),
+  category: text("category").notNull().default("performance"), // 'performance', 'accessibility', 'seo', 'security'
+  prerequisites: jsonb("prerequisites"), // Array of required skills or path IDs
+  tags: jsonb("tags"), // Array of tags
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Learning levels within paths
+export const learningLevels = pgTable("learning_levels", {
+  id: serial("id").primaryKey(),
+  pathId: integer("path_id").notNull().references(() => learningPaths.id),
+  levelNumber: integer("level_number").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  content: jsonb("content"), // Rich content with theory, examples, etc.
+  objectives: jsonb("objectives"), // Array of learning objectives
+  pointsReward: integer("points_reward").notNull().default(100),
+  challengeType: text("challenge_type").notNull().default("quiz"), // 'quiz', 'practical', 'analysis'
+  challengeData: jsonb("challenge_data"), // Challenge configuration and questions
+  passingScore: integer("passing_score").notNull().default(80), // Percentage needed to pass
+  timeLimit: integer("time_limit"), // Time limit in minutes (optional)
+  unlockRequirements: jsonb("unlock_requirements"), // Requirements to unlock this level
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User progress tracking
+export const userProgress = pgTable("user_progress", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(), // User identifier (can be session-based or authenticated)
+  pathId: integer("path_id").notNull().references(() => learningPaths.id),
+  levelId: integer("level_id").references(() => learningLevels.id),
+  status: text("status").notNull().default("not_started"), // 'not_started', 'in_progress', 'completed', 'failed'
+  score: integer("score"), // Score achieved on level/challenge
+  timeSpent: integer("time_spent"), // Time spent in minutes
+  attempts: integer("attempts").notNull().default(0),
+  lastAttemptAt: timestamp("last_attempt_at"),
+  completedAt: timestamp("completed_at"),
+  progressData: jsonb("progress_data"), // Detailed progress information
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Achievements and badges
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  icon: text("icon"), // Icon identifier or URL
+  type: text("type").notNull().default("completion"), // 'completion', 'streak', 'score', 'time', 'special'
+  category: text("category").notNull().default("general"), // 'performance', 'accessibility', 'seo', 'security', 'general'
+  criteria: jsonb("criteria"), // Achievement unlock criteria
+  pointsReward: integer("points_reward").notNull().default(50),
+  badgeLevel: text("badge_level").notNull().default("bronze"), // 'bronze', 'silver', 'gold', 'platinum'
+  isHidden: boolean("is_hidden").notNull().default(false), // Hidden achievements
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User achievements
+export const userAchievements = pgTable("user_achievements", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  achievementId: integer("achievement_id").notNull().references(() => achievements.id),
+  unlockedAt: timestamp("unlocked_at").defaultNow(),
+  progress: integer("progress").notNull().default(0), // Progress towards achievement (0-100)
+  metadata: jsonb("metadata"), // Additional achievement-specific data
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User global stats and leaderboard
+export const userStats = pgTable("user_stats", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().unique(),
+  username: text("username"), // Display name
+  totalPoints: integer("total_points").notNull().default(0),
+  level: integer("level").notNull().default(1),
+  experience: integer("experience").notNull().default(0),
+  pathsCompleted: integer("paths_completed").notNull().default(0),
+  levelsCompleted: integer("levels_completed").notNull().default(0),
+  achievementsUnlocked: integer("achievements_unlocked").notNull().default(0),
+  currentStreak: integer("current_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  lastActivityAt: timestamp("last_activity_at").defaultNow(),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  profileData: jsonb("profile_data"), // Additional profile information
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const projectsRelations = relations(projects, ({ many }) => ({
   applications: many(applications),
@@ -237,6 +338,42 @@ export const analysesRelations = relations(analyses, ({ one }) => ({
   }),
 }));
 
+// Gamification relations
+export const learningPathsRelations = relations(learningPaths, ({ many }) => ({
+  levels: many(learningLevels),
+  userProgress: many(userProgress),
+}));
+
+export const learningLevelsRelations = relations(learningLevels, ({ one, many }) => ({
+  path: one(learningPaths, {
+    fields: [learningLevels.pathId],
+    references: [learningPaths.id],
+  }),
+  userProgress: many(userProgress),
+}));
+
+export const userProgressRelations = relations(userProgress, ({ one }) => ({
+  path: one(learningPaths, {
+    fields: [userProgress.pathId],
+    references: [learningPaths.id],
+  }),
+  level: one(learningLevels, {
+    fields: [userProgress.levelId],
+    references: [learningLevels.id],
+  }),
+}));
+
+export const achievementsRelations = relations(achievements, ({ many }) => ({
+  userAchievements: many(userAchievements),
+}));
+
+export const userAchievementsRelations = relations(userAchievements, ({ one }) => ({
+  achievement: one(achievements, {
+    fields: [userAchievements.achievementId],
+    references: [achievements.id],
+  }),
+}));
+
 // Insert and select schemas
 export const insertAnalysisSchema = createInsertSchema(analyses).omit({
   id: true,
@@ -278,6 +415,42 @@ export const insertStoryAnalysisSchema = createInsertSchema(storyAnalyses).omit(
   updatedAt: true,
 });
 
+// Gamification schemas
+export const insertLearningPathSchema = createInsertSchema(learningPaths).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLearningLevelSchema = createInsertSchema(learningLevels).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAchievementSchema = createInsertSchema(achievements).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserAchievementSchema = createInsertSchema(userAchievements).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserStatsSchema = createInsertSchema(userStats).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const selectAnalysisSchema = createSelectSchema(analyses);
 export const selectUserSessionSchema = createSelectSchema(userSessions);
 export const selectProjectSchema = createSelectSchema(projects);
@@ -285,12 +458,32 @@ export const selectApplicationSchema = createSelectSchema(applications);
 export const selectEnvironmentSchema = createSelectSchema(environments);
 export const selectUserStorySchema = createSelectSchema(userStories);
 export const selectStoryAnalysisSchema = createSelectSchema(storyAnalyses);
+export const selectLearningPathSchema = createSelectSchema(learningPaths);
+export const selectLearningLevelSchema = createSelectSchema(learningLevels);
+export const selectUserProgressSchema = createSelectSchema(userProgress);
+export const selectAchievementSchema = createSelectSchema(achievements);
+export const selectUserAchievementSchema = createSelectSchema(userAchievements);
+export const selectUserStatsSchema = createSelectSchema(userStats);
 
 // Type exports
 export type UserStory = typeof userStories.$inferSelect;
 export type InsertUserStory = typeof insertUserStorySchema._type;
 export type StoryAnalysis = typeof storyAnalyses.$inferSelect;
 export type InsertStoryAnalysis = typeof insertStoryAnalysisSchema._type;
+
+// Gamification types
+export type LearningPath = typeof learningPaths.$inferSelect;
+export type InsertLearningPath = typeof insertLearningPathSchema._type;
+export type LearningLevel = typeof learningLevels.$inferSelect;
+export type InsertLearningLevel = typeof insertLearningLevelSchema._type;
+export type UserProgress = typeof userProgress.$inferSelect;
+export type InsertUserProgress = typeof insertUserProgressSchema._type;
+export type Achievement = typeof achievements.$inferSelect;
+export type InsertAchievement = typeof insertAchievementSchema._type;
+export type UserAchievement = typeof userAchievements.$inferSelect;
+export type InsertUserAchievement = typeof insertUserAchievementSchema._type;
+export type UserStats = typeof userStats.$inferSelect;
+export type InsertUserStats = typeof insertUserStatsSchema._type;
 
 // Legacy compatibility schemas for existing components
 export const performanceAnalysisSchema = z.object({

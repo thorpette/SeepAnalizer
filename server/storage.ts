@@ -5,6 +5,12 @@ import {
   environments,
   userStories,
   storyAnalyses,
+  learningPaths,
+  learningLevels,
+  userStats,
+  userProgress,
+  achievements,
+  userAchievements,
   type Analysis, 
   type InsertAnalysis, 
   type PerformanceAnalysis,
@@ -17,10 +23,22 @@ import {
   type UserStory,
   type InsertUserStory,
   type StoryAnalysis,
-  type InsertStoryAnalysis
+  type InsertStoryAnalysis,
+  type LearningPath,
+  type InsertLearningPath,
+  type LearningLevel,
+  type InsertLearningLevel,
+  type UserStats,
+  type InsertUserStats,
+  type UserProgress,
+  type InsertUserProgress,
+  type Achievement,
+  type InsertAchievement,
+  type UserAchievement,
+  type InsertUserAchievement
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -71,6 +89,29 @@ export interface IStorage {
   // Get project structure with stories
   getProjectStructure(): Promise<Project[]>;
   getProjectStructureWithStories(): Promise<Project[]>;
+  
+  // Gamification methods
+  getLearningPaths(): Promise<LearningPath[]>;
+  getLearningPath(id: number): Promise<LearningPath | undefined>;
+  getLearningPathWithLevels(id: number): Promise<LearningPath & { levels: LearningLevel[] } | undefined>;
+  createLearningPath(path: InsertLearningPath): Promise<LearningPath>;
+  
+  getLearningLevel(id: number): Promise<LearningLevel | undefined>;
+  getLearningLevelsByPath(pathId: number): Promise<LearningLevel[]>;
+  createLearningLevel(level: InsertLearningLevel): Promise<LearningLevel>;
+  
+  getUserStats(userId: string): Promise<UserStats | undefined>;
+  createUserStats(stats: InsertUserStats): Promise<UserStats>;
+  updateUserStats(userId: string, updates: Partial<UserStats>): Promise<UserStats | undefined>;
+  
+  getUserProgress(userId: string, pathId: number): Promise<UserProgress[]>;
+  updateUserProgress(progress: InsertUserProgress): Promise<UserProgress>;
+  
+  getAchievements(): Promise<Achievement[]>;
+  getUserAchievements(userId: string): Promise<Achievement[]>;
+  unlockAchievement(userId: string, achievementId: number): Promise<UserAchievement>;
+  
+  getLeaderboard(limit?: number): Promise<UserStats[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -450,6 +491,133 @@ export class DatabaseStorage implements IStorage {
     
     return projectsWithStoriesAndApps;
   }
+
+  // Gamification methods implementation
+  async getLearningPaths(): Promise<LearningPath[]> {
+    return await db.select().from(learningPaths).where(eq(learningPaths.isActive, true));
+  }
+
+  async getLearningPath(id: number): Promise<LearningPath | undefined> {
+    const [path] = await db.select().from(learningPaths).where(eq(learningPaths.id, id));
+    return path || undefined;
+  }
+
+  async getLearningPathWithLevels(id: number): Promise<LearningPath & { levels: LearningLevel[] } | undefined> {
+    const path = await this.getLearningPath(id);
+    if (!path) return undefined;
+    
+    const levels = await db.select().from(learningLevels).where(eq(learningLevels.pathId, id));
+    return { ...path, levels };
+  }
+
+  async createLearningPath(path: InsertLearningPath): Promise<LearningPath> {
+    const [newPath] = await db.insert(learningPaths).values(path).returning();
+    return newPath;
+  }
+
+  async getLearningLevel(id: number): Promise<LearningLevel | undefined> {
+    const [level] = await db.select().from(learningLevels).where(eq(learningLevels.id, id));
+    return level || undefined;
+  }
+
+  async getLearningLevelsByPath(pathId: number): Promise<LearningLevel[]> {
+    return await db.select().from(learningLevels).where(eq(learningLevels.pathId, pathId));
+  }
+
+  async createLearningLevel(level: InsertLearningLevel): Promise<LearningLevel> {
+    const [newLevel] = await db.insert(learningLevels).values(level).returning();
+    return newLevel;
+  }
+
+  async getUserStats(userId: string): Promise<UserStats | undefined> {
+    const [stats] = await db.select().from(userStats).where(eq(userStats.userId, userId));
+    return stats || undefined;
+  }
+
+  async createUserStats(stats: InsertUserStats): Promise<UserStats> {
+    const [newStats] = await db.insert(userStats).values(stats).returning();
+    return newStats;
+  }
+
+  async updateUserStats(userId: string, updates: Partial<UserStats>): Promise<UserStats | undefined> {
+    const [stats] = await db
+      .update(userStats)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(userStats.userId, userId))
+      .returning();
+    return stats || undefined;
+  }
+
+  async getUserProgress(userId: string, pathId: number): Promise<UserProgress[]> {
+    return await db.select().from(userProgress).where(
+      and(eq(userProgress.userId, userId), eq(userProgress.pathId, pathId))
+    );
+  }
+
+  async updateUserProgress(progress: InsertUserProgress): Promise<UserProgress> {
+    const [existingProgress] = await db.select().from(userProgress).where(
+      and(eq(userProgress.userId, progress.userId), eq(userProgress.levelId, progress.levelId))
+    );
+
+    if (existingProgress) {
+      const [updated] = await db
+        .update(userProgress)
+        .set({
+          ...progress,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(eq(userProgress.userId, progress.userId), eq(userProgress.levelId, progress.levelId))
+        )
+        .returning();
+      return updated;
+    } else {
+      const [newProgress] = await db.insert(userProgress).values(progress).returning();
+      return newProgress;
+    }
+  }
+
+  async getAchievements(): Promise<Achievement[]> {
+    return await db.select().from(achievements);
+  }
+
+  async getUserAchievements(userId: string): Promise<Achievement[]> {
+    const userAchievementRecords = await db.select().from(userAchievements).where(eq(userAchievements.userId, userId));
+    const achievementIds = userAchievementRecords.map(ua => ua.achievementId);
+    
+    if (achievementIds.length === 0) return [];
+    
+    return await db.select().from(achievements).where(
+      inArray(achievements.id, achievementIds)
+    );
+  }
+
+  async unlockAchievement(userId: string, achievementId: number): Promise<UserAchievement> {
+    const [existing] = await db.select().from(userAchievements).where(
+      and(eq(userAchievements.userId, userId), eq(userAchievements.achievementId, achievementId))
+    );
+
+    if (existing) {
+      return existing;
+    }
+
+    const [newAchievement] = await db.insert(userAchievements).values({
+      userId,
+      achievementId,
+      unlockedAt: new Date(),
+    }).returning();
+    
+    return newAchievement;
+  }
+
+  async getLeaderboard(limit: number = 10): Promise<UserStats[]> {
+    return await db.select().from(userStats)
+      .orderBy(desc(userStats.totalPoints))
+      .limit(limit);
+  }
 }
 
 // Legacy MemStorage for fallback
@@ -538,6 +706,24 @@ export class MemStorage implements IStorage {
   async updateStoryAnalysis(): Promise<any> { return undefined; }
   async deleteStoryAnalysis(): Promise<boolean> { return false; }
   async getProjectStructureWithStories(): Promise<any[]> { return []; }
+  
+  // Gamification methods (stubbed for MemStorage)
+  async getLearningPaths(): Promise<any[]> { return []; }
+  async getLearningPath(): Promise<any> { return undefined; }
+  async getLearningPathWithLevels(): Promise<any> { return undefined; }
+  async createLearningPath(): Promise<any> { throw new Error('Gamification not supported in MemStorage'); }
+  async getLearningLevel(): Promise<any> { return undefined; }
+  async getLearningLevelsByPath(): Promise<any[]> { return []; }
+  async createLearningLevel(): Promise<any> { throw new Error('Gamification not supported in MemStorage'); }
+  async getUserStats(): Promise<any> { return undefined; }
+  async createUserStats(): Promise<any> { throw new Error('Gamification not supported in MemStorage'); }
+  async updateUserStats(): Promise<any> { return undefined; }
+  async getUserProgress(): Promise<any[]> { return []; }
+  async updateUserProgress(): Promise<any> { throw new Error('Gamification not supported in MemStorage'); }
+  async getAchievements(): Promise<any[]> { return []; }
+  async getUserAchievements(): Promise<any[]> { return []; }
+  async unlockAchievement(): Promise<any> { throw new Error('Gamification not supported in MemStorage'); }
+  async getLeaderboard(): Promise<any[]> { return []; }
 }
 
 // Use DatabaseStorage as default

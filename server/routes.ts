@@ -985,6 +985,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Gamification API Routes
+
+  // Get all learning paths
+  app.get("/api/learning-paths", async (req, res) => {
+    try {
+      const paths = await storage.getLearningPaths();
+      res.json(paths);
+    } catch (error) {
+      console.error('Error fetching learning paths:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get learning path by ID with levels
+  app.get("/api/learning-paths/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const path = await storage.getLearningPathWithLevels(parseInt(id));
+      if (!path) {
+        return res.status(404).json({ message: "Learning path not found" });
+      }
+      res.json(path);
+    } catch (error) {
+      console.error('Error fetching learning path:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get learning level by ID
+  app.get("/api/learning-levels/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const level = await storage.getLearningLevel(parseInt(id));
+      if (!level) {
+        return res.status(404).json({ message: "Learning level not found" });
+      }
+      res.json(level);
+    } catch (error) {
+      console.error('Error fetching learning level:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get user stats
+  app.get("/api/user-stats/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const stats = await storage.getUserStats(userId);
+      if (!stats) {
+        // Create default stats for new user
+        const newStats = await storage.createUserStats({
+          userId,
+          username: `Usuario`,
+          totalPoints: 0,
+          level: 1,
+          experience: 0,
+          pathsCompleted: 0,
+          levelsCompleted: 0,
+          achievementsUnlocked: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          profileData: {}
+        });
+        return res.json(newStats);
+      }
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get user progress for a path
+  app.get("/api/user-progress/:userId/path/:pathId", async (req, res) => {
+    try {
+      const { userId, pathId } = req.params;
+      const progress = await storage.getUserProgress(userId, parseInt(pathId));
+      res.json(progress || []);
+    } catch (error) {
+      console.error('Error fetching user progress:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update user progress
+  app.post("/api/user-progress", async (req, res) => {
+    try {
+      const progressData = req.body;
+      const progress = await storage.updateUserProgress(progressData);
+      res.json(progress);
+    } catch (error) {
+      console.error('Error updating user progress:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get achievements
+  app.get("/api/achievements", async (req, res) => {
+    try {
+      const achievements = await storage.getAchievements();
+      res.json(achievements);
+    } catch (error) {
+      console.error('Error fetching achievements:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get user achievements
+  app.get("/api/user-achievements/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const achievements = await storage.getUserAchievements(userId);
+      res.json(achievements);
+    } catch (error) {
+      console.error('Error fetching user achievements:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get leaderboard
+  app.get("/api/leaderboard", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const leaderboard = await storage.getLeaderboard(limit);
+      res.json(leaderboard);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
