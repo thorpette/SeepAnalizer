@@ -3,9 +3,10 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Gauge, Diamond } from "lucide-react";
+import { Gauge, Diamond, Settings } from "lucide-react";
 import Home from "@/pages/home";
 import RubyAgentPage from "@/pages/ruby-agent";
+import ProjectAdmin from "@/pages/project-admin";
 import NotFound from "@/pages/not-found";
 
 function Navigation() {
@@ -37,6 +38,17 @@ function Navigation() {
             <Diamond className="w-4 h-4 mr-2" />
             Agente Ruby
           </Link>
+          <Link 
+            href="/admin"
+            className={`flex items-center px-3 py-4 text-sm font-medium border-b-2 transition-colors ${
+              location === "/admin" 
+                ? "border-blue-500 text-blue-600" 
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Administración
+          </Link>
         </div>
       </div>
     </nav>
@@ -50,6 +62,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/ruby-agent" component={RubyAgentPage} />
+        <Route path="/admin" component={ProjectAdmin} />
         <Route component={NotFound} />
       </Switch>
     </div>

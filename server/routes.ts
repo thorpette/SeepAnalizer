@@ -484,6 +484,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin CRUD Operations for Projects
+  app.post("/api/projects", async (req, res) => {
+    try {
+      const { name, description } = req.body;
+      const project = await storage.createProject({ name, description });
+      res.json(project);
+    } catch (error) {
+      console.error('Error creating project:', error);
+      res.status(500).json({ error: "Error creando proyecto" });
+    }
+  });
+
+  app.put("/api/projects/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { name, description } = req.body;
+      const project = await storage.updateProject(id, { name, description });
+      res.json(project);
+    } catch (error) {
+      console.error('Error updating project:', error);
+      res.status(500).json({ error: "Error actualizando proyecto" });
+    }
+  });
+
+  app.delete("/api/projects/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteProject(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      res.status(500).json({ error: "Error eliminando proyecto" });
+    }
+  });
+
+  // Admin CRUD Operations for Applications
+  app.post("/api/applications", async (req, res) => {
+    try {
+      const { projectId, name, description } = req.body;
+      const application = await storage.createApplication({ projectId, name, description });
+      res.json(application);
+    } catch (error) {
+      console.error('Error creating application:', error);
+      res.status(500).json({ error: "Error creando aplicación" });
+    }
+  });
+
+  app.put("/api/applications/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { name, description } = req.body;
+      const application = await storage.updateApplication(id, { name, description });
+      res.json(application);
+    } catch (error) {
+      console.error('Error updating application:', error);
+      res.status(500).json({ error: "Error actualizando aplicación" });
+    }
+  });
+
+  app.delete("/api/applications/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteApplication(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting application:', error);
+      res.status(500).json({ error: "Error eliminando aplicación" });
+    }
+  });
+
+  // Admin CRUD Operations for Environments
+  app.post("/api/environments", async (req, res) => {
+    try {
+      const { applicationId, name, displayName, url, description, isActive } = req.body;
+      const environment = await storage.createEnvironment({ 
+        applicationId, name, displayName, url, description, isActive 
+      });
+      res.json(environment);
+    } catch (error) {
+      console.error('Error creating environment:', error);
+      res.status(500).json({ error: "Error creando entorno" });
+    }
+  });
+
+  app.put("/api/environments/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { name, displayName, url, description, isActive } = req.body;
+      const environment = await storage.updateEnvironment(id, { 
+        name, displayName, url, description, isActive 
+      });
+      res.json(environment);
+    } catch (error) {
+      console.error('Error updating environment:', error);
+      res.status(500).json({ error: "Error actualizando entorno" });
+    }
+  });
+
+  app.delete("/api/environments/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteEnvironment(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting environment:', error);
+      res.status(500).json({ error: "Error eliminando entorno" });
+    }
+  });
+
   // Servir documento de diseño funcional
   app.get('/design-document', (req, res) => {
     const fs = require('fs');
@@ -595,7 +704,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const analysis = await storage.createAnalysis(initialAnalysis);
 
       // Start async analysis
-      analyzeWebsite(analysisUrl, device)
+      analyzeWebsite(analysisUrl, device as 'desktop' | 'mobile')
         .then(async (results) => {
           // Convert results to database format
           const dbUpdates = {
