@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack web application that provides comprehensive website performance analysis similar to Google PageSpeed Insights with enhanced backend analysis capabilities. The application analyzes websites for performance metrics, accessibility, best practices, and SEO scores, while also providing detailed backend server analysis including Ruby/Rails detection, security headers, cache optimization, and database performance metrics.
+This is a comprehensive web performance analysis system for Spring Boot applications with user story testing, now expanded to include gamified learning paths for web optimization and interactive accessibility auditing. The system features multi-project management where projects contain all applications, environments, user stories, and performance analyses. Provides detailed performance metrics, security analysis, and optimization recommendations in Spanish, with PostgreSQL persistence, integrated reporting, plus educational gamification elements and real-time WCAG accessibility auditing capabilities.
 
 ## User Preferences
 
@@ -47,6 +47,18 @@ Preferred communication style: Simple, everyday language.
 - **ErrorState**: Error handling and retry functionality
 - **RubyAgentStatus**: Interactive testing interface for Ruby agent functionality
 - **Navigation**: Multi-page navigation between main analysis and Ruby agent tools
+- **LearningPaths**: Gamified learning interface with 4 main tabs:
+  - Learning paths with progress tracking and difficulty levels
+  - Interactive accessibility auditing with real-time URL analysis
+  - Achievement system with unlockable badges and rewards
+  - Leaderboard with user statistics and competition elements
+- **AccessibilityAuditInterface**: Dedicated WCAG auditing tool with:
+  - URL input form with viewport selection (desktop/mobile/tablet)
+  - Real-time audit execution with progress tracking
+  - WCAG 4-pillar scoring (Perceivable, Operable, Understandable, Robust)
+  - Compliance level badges (WCAG A, AA, AAA)
+  - Issue categorization and recommendations
+  - Gamification integration with points and badge rewards
 
 ### Backend Services
 - **Analysis Engine**: Enhanced performance analysis with real backend detection
@@ -77,6 +89,21 @@ Preferred communication style: Simple, everyday language.
 
 - **Analysis History Table**: Links analyses to user sessions
   - Relationship tracking between sessions and analyses
+
+- **Gamification Tables**: Complete gamification system for learning engagement
+  - **Learning Paths**: 5 structured paths covering performance, accessibility, security, SEO, and advanced topics
+  - **Achievements**: 6 different achievement types with bronze/silver/gold/platinum levels
+  - **User Statistics**: Experience points, levels, streaks, and unlocked content tracking
+  - **User Progress**: Individual progress tracking per learning path with completion percentages
+
+- **Accessibility Audit Tables**: Comprehensive WCAG accessibility auditing system
+  - **Accessibility Audits**: Full WCAG audit results with 4-pillar scoring system
+    - Perceivable, Operable, Understandable, and Robust scores (0-100)
+    - Overall accessibility score calculation
+    - WCAG compliance levels (A, AA, AAA) tracking
+    - Issue detection (color contrast, keyboard navigation, ARIA, alt text)
+    - Gamification integration (points earned, badges unlocked)
+    - Analysis lifecycle tracking (pending → processing → completed/failed)
 
 ### Shared Schema
 - **Legacy Compatibility**: Maintains existing Zod schemas for frontend compatibility

@@ -11,6 +11,7 @@ import {
   userProgress,
   achievements,
   userAchievements,
+  accessibilityAudits,
   type Analysis, 
   type InsertAnalysis, 
   type PerformanceAnalysis,
@@ -35,7 +36,9 @@ import {
   type Achievement,
   type InsertAchievement,
   type UserAchievement,
-  type InsertUserAchievement
+  type InsertUserAchievement,
+  type AccessibilityAudit,
+  type InsertAccessibilityAudit
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, inArray } from "drizzle-orm";
@@ -112,6 +115,13 @@ export interface IStorage {
   unlockAchievement(userId: string, achievementId: number): Promise<UserAchievement>;
   
   getLeaderboard(limit?: number): Promise<UserStats[]>;
+  
+  // Accessibility audit methods
+  createAccessibilityAudit(audit: InsertAccessibilityAudit): Promise<AccessibilityAudit>;
+  updateAccessibilityAudit(id: number, updates: Partial<AccessibilityAudit>): Promise<AccessibilityAudit | undefined>;
+  getAccessibilityAudit(id: number): Promise<AccessibilityAudit | undefined>;
+  getUserAccessibilityAudits(userId: string, limit?: number): Promise<AccessibilityAudit[]>;
+  getAccessibilityAuditsByUrl(url: string, limit?: number): Promise<AccessibilityAudit[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -558,6 +568,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserProgress(progress: InsertUserProgress): Promise<UserProgress> {
+    if (!progress.levelId) {
+      throw new Error('Level ID is required for user progress');
+    }
+
     const [existingProgress] = await db.select().from(userProgress).where(
       and(eq(userProgress.userId, progress.userId), eq(userProgress.levelId, progress.levelId))
     );
@@ -616,6 +630,43 @@ export class DatabaseStorage implements IStorage {
   async getLeaderboard(limit: number = 10): Promise<UserStats[]> {
     return await db.select().from(userStats)
       .orderBy(desc(userStats.totalPoints))
+      .limit(limit);
+  }
+
+  // Accessibility audit methods implementation
+  async createAccessibilityAudit(audit: InsertAccessibilityAudit): Promise<AccessibilityAudit> {
+    const [newAudit] = await db.insert(accessibilityAudits).values(audit).returning();
+    return newAudit;
+  }
+
+  async updateAccessibilityAudit(id: number, updates: Partial<AccessibilityAudit>): Promise<AccessibilityAudit | undefined> {
+    const [audit] = await db
+      .update(accessibilityAudits)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(accessibilityAudits.id, id))
+      .returning();
+    return audit || undefined;
+  }
+
+  async getAccessibilityAudit(id: number): Promise<AccessibilityAudit | undefined> {
+    const [audit] = await db.select().from(accessibilityAudits).where(eq(accessibilityAudits.id, id));
+    return audit || undefined;
+  }
+
+  async getUserAccessibilityAudits(userId: string, limit: number = 20): Promise<AccessibilityAudit[]> {
+    return await db.select().from(accessibilityAudits)
+      .where(eq(accessibilityAudits.userId, userId))
+      .orderBy(desc(accessibilityAudits.createdAt))
+      .limit(limit);
+  }
+
+  async getAccessibilityAuditsByUrl(url: string, limit: number = 10): Promise<AccessibilityAudit[]> {
+    return await db.select().from(accessibilityAudits)
+      .where(eq(accessibilityAudits.url, url))
+      .orderBy(desc(accessibilityAudits.createdAt))
       .limit(limit);
   }
 }
@@ -724,6 +775,13 @@ export class MemStorage implements IStorage {
   async getUserAchievements(): Promise<any[]> { return []; }
   async unlockAchievement(): Promise<any> { throw new Error('Gamification not supported in MemStorage'); }
   async getLeaderboard(): Promise<any[]> { return []; }
+  
+  // Accessibility audit methods (stubbed for MemStorage)
+  async createAccessibilityAudit(): Promise<any> { throw new Error('Accessibility audits not supported in MemStorage'); }
+  async updateAccessibilityAudit(): Promise<any> { return undefined; }
+  async getAccessibilityAudit(): Promise<any> { return undefined; }
+  async getUserAccessibilityAudits(): Promise<any[]> { return []; }
+  async getAccessibilityAuditsByUrl(): Promise<any[]> { return []; }
 }
 
 // Use DatabaseStorage as default

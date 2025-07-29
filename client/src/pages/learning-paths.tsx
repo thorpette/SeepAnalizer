@@ -12,7 +12,12 @@ import {
   Award,
   TrendingUp,
   Lock,
-  CheckCircle
+  CheckCircle,
+  Eye,
+  Keyboard,
+  Monitor,
+  AlertCircle,
+  CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,9 +67,36 @@ interface Achievement {
   progress?: number;
 }
 
+interface AccessibilityAudit {
+  id: number;
+  userId: string;
+  url: string;
+  viewport: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  perceivableScore: number;
+  operableScore: number;
+  understandableScore: number;
+  robustScore: number;
+  overallScore: number;
+  colorContrastIssues: any[];
+  keyboardNavigationIssues: any[];
+  ariaIssues: any[];
+  altTextIssues: any[];
+  wcagALevel: boolean;
+  wcagAALevel: boolean;
+  wcagAAALevel: boolean;
+  recommendations: any[];
+  pointsEarned: number;
+  badgesUnlocked: string[];
+  createdAt: string;
+}
+
 export default function LearningPaths() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
+  const [auditUrl, setAuditUrl] = useState<string>("");
+  const [auditViewport, setAuditViewport] = useState<string>("desktop");
+  const [isRunningAudit, setIsRunningAudit] = useState<boolean>(false);
 
   // Fetch learning paths
   const { data: learningPaths = [], isLoading: isLoadingPaths } = useQuery<LearningPath[]>({
@@ -99,6 +131,12 @@ export default function LearningPaths() {
   // Fetch leaderboard
   const { data: leaderboard = [] } = useQuery<UserStats[]>({
     queryKey: ['/api/leaderboard'],
+    initialData: [],
+  });
+
+  // Fetch user's accessibility audits
+  const { data: accessibilityAudits = [], refetch: refetchAudits } = useQuery<AccessibilityAudit[]>({
+    queryKey: ['/api/user-accessibility-audits', 'demo-user-current'],
     initialData: [],
   });
 
@@ -163,6 +201,59 @@ export default function LearningPaths() {
     return Math.max(0, Math.min(100, progress));
   };
 
+  const runAccessibilityAudit = async () => {
+    if (!auditUrl.trim()) return;
+    
+    setIsRunningAudit(true);
+    try {
+      const response = await fetch('/api/accessibility-audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: auditUrl,
+          viewport: auditViewport,
+          userId: 'demo-user-current'
+        })
+      });
+      
+      const { auditId } = await response.json();
+      
+      // Poll for audit completion
+      const pollAudit = async () => {
+        const auditResponse = await fetch(`/api/accessibility-audit/${auditId}`);
+        const audit = await auditResponse.json();
+        
+        if (audit.status === 'completed' || audit.status === 'failed') {
+          setIsRunningAudit(false);
+          refetchAudits();
+          return;
+        }
+        
+        setTimeout(pollAudit, 1000);
+      };
+      
+      setTimeout(pollAudit, 1000);
+    } catch (error) {
+      console.error('Error running accessibility audit:', error);
+      setIsRunningAudit(false);
+    }
+  };
+
+  const getWCAGBadgeColor = (level: string) => {
+    switch (level) {
+      case 'A': return 'bg-green-100 text-green-800 border-green-300';
+      case 'AA': return 'bg-blue-100 text-blue-800 border-blue-300';  
+      case 'AAA': return 'bg-purple-100 text-purple-800 border-purple-300';
+      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return 'text-green-600';
+    if (score >= 75) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header con estadísticas del usuario */}
@@ -222,10 +313,14 @@ export default function LearningPaths() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="paths" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="paths" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
               Rutas de Aprendizaje
+            </TabsTrigger>
+            <TabsTrigger value="accessibility" className="flex items-center gap-2">
+              <Eye className="w-4 h-4" />
+              Auditoría de Accesibilidad
             </TabsTrigger>
             <TabsTrigger value="achievements" className="flex items-center gap-2">
               <Trophy className="w-4 h-4" />
@@ -375,6 +470,219 @@ export default function LearningPaths() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* Accessibility Audit Tab */}
+          <TabsContent value="accessibility">
+            <div className="space-y-6">
+              {/* Audit Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Eye className="w-5 h-5" />
+                    Nueva Auditoría de Accesibilidad
+                  </CardTitle>
+                  <CardDescription>
+                    Ejecuta una auditoría completa WCAG para obtener puntos y desbloquear logros
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <input
+                        type="url"
+                        placeholder="https://ejemplo.com"
+                        value={auditUrl}
+                        onChange={(e) => setAuditUrl(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <select
+                        value={auditViewport}
+                        onChange={(e) => setAuditViewport(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="desktop">Desktop</option>
+                        <option value="mobile">Mobile</option>
+                        <option value="tablet">Tablet</option>
+                      </select>
+                    </div>
+                    <Button 
+                      onClick={runAccessibilityAudit}
+                      disabled={isRunningAudit || !auditUrl.trim()}
+                      className="flex items-center gap-2"
+                    >
+                      {isRunningAudit ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Analizando...
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4" />
+                          Auditar
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recent Audits */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold">Auditorías Recientes</h3>
+                
+                {accessibilityAudits.length === 0 ? (
+                  <Card>
+                    <CardContent className="text-center py-12">
+                      <Monitor className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h4 className="text-lg font-medium text-gray-900 mb-2">
+                        No hay auditorías aún
+                      </h4>
+                      <p className="text-gray-600">
+                        Ejecuta tu primera auditoría de accesibilidad para comenzar a ganar puntos
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {accessibilityAudits.map((audit) => (
+                      <Card key={audit.id} className="hover:shadow-lg transition-shadow">
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <CardTitle className="text-lg truncate">{audit.url}</CardTitle>
+                              <CardDescription className="flex items-center gap-2 mt-1">
+                                <Monitor className="w-4 h-4" />
+                                {audit.viewport}
+                                <span className="text-gray-400">•</span>
+                                {new Date(audit.createdAt).toLocaleDateString()}
+                              </CardDescription>
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                              <span className={`text-2xl font-bold ${getScoreColor(audit.overallScore)}`}>
+                                {audit.overallScore}
+                              </span>
+                              <span className="text-xs text-gray-500">Puntuación</span>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          {audit.status === 'pending' || audit.status === 'processing' ? (
+                            <div className="flex items-center justify-center py-8">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                              <span className="ml-3 text-gray-600">
+                                {audit.status === 'pending' ? 'En cola...' : 'Procesando...'}
+                              </span>
+                            </div>
+                          ) : audit.status === 'failed' ? (
+                            <div className="flex items-center justify-center py-8 text-red-600">
+                              <AlertCircle className="w-6 h-6 mr-2" />
+                              <span>Error en la auditoría</span>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              {/* WCAG Scores */}
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-blue-50 p-3 rounded-lg">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Eye className="w-4 h-4 text-blue-600" />
+                                    <span className="text-sm font-medium">Perceptible</span>
+                                  </div>
+                                  <span className={`text-lg font-bold ${getScoreColor(audit.perceivableScore)}`}>
+                                    {audit.perceivableScore}
+                                  </span>
+                                </div>
+                                <div className="bg-green-50 p-3 rounded-lg">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Keyboard className="w-4 h-4 text-green-600" />
+                                    <span className="text-sm font-medium">Operable</span>
+                                  </div>
+                                  <span className={`text-lg font-bold ${getScoreColor(audit.operableScore)}`}>
+                                    {audit.operableScore}
+                                  </span>
+                                </div>
+                                <div className="bg-yellow-50 p-3 rounded-lg">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Users className="w-4 h-4 text-yellow-600" />
+                                    <span className="text-sm font-medium">Comprensible</span>
+                                  </div>
+                                  <span className={`text-lg font-bold ${getScoreColor(audit.understandableScore)}`}>
+                                    {audit.understandableScore}
+                                  </span>
+                                </div>
+                                <div className="bg-purple-50 p-3 rounded-lg">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Target className="w-4 h-4 text-purple-600" />
+                                    <span className="text-sm font-medium">Robusto</span>
+                                  </div>
+                                  <span className={`text-lg font-bold ${getScoreColor(audit.robustScore)}`}>
+                                    {audit.robustScore}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* WCAG Compliance */}
+                              <div className="flex gap-2">
+                                {audit.wcagALevel && (
+                                  <Badge className={getWCAGBadgeColor('A')} variant="outline">
+                                    WCAG A
+                                  </Badge>
+                                )}
+                                {audit.wcagAALevel && (
+                                  <Badge className={getWCAGBadgeColor('AA')} variant="outline">
+                                    WCAG AA
+                                  </Badge>
+                                )}
+                                {audit.wcagAAALevel && (
+                                  <Badge className={getWCAGBadgeColor('AAA')} variant="outline">
+                                    WCAG AAA
+                                  </Badge>
+                                )}
+                              </div>
+
+                              {/* Issues Summary */}
+                              <div className="text-sm text-gray-600">
+                                <div className="flex items-center justify-between">
+                                  <span>Problemas encontrados:</span>
+                                  <span className="font-medium">
+                                    {(audit.colorContrastIssues?.length || 0) + 
+                                     (audit.keyboardNavigationIssues?.length || 0) + 
+                                     (audit.ariaIssues?.length || 0) + 
+                                     (audit.altTextIssues?.length || 0)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span>Puntos ganados:</span>
+                                  <span className="font-medium text-green-600">
+                                    +{audit.pointsEarned}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Badges Unlocked */}
+                              {audit.badgesUnlocked && audit.badgesUnlocked.length > 0 && (
+                                <div>
+                                  <span className="text-sm font-medium text-gray-700">Logros desbloqueados:</span>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {audit.badgesUnlocked.map((badge, index) => (
+                                      <Badge key={index} variant="outline" className="text-xs">
+                                        🏆 {badge}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </TabsContent>
 
           {/* Achievements Tab */}

@@ -272,6 +272,58 @@ export const userStats = pgTable("user_stats", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Accessibility Audits for gamified learning
+export const accessibilityAudits = pgTable("accessibility_audits", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  url: text("url").notNull(),
+  userAgent: text("user_agent"),
+  viewport: text("viewport").default("desktop"), // 'desktop', 'mobile', 'tablet'
+  
+  // WCAG Guidelines Scores
+  perceivableScore: integer("perceivable_score").default(0), // Score 0-100
+  operableScore: integer("operable_score").default(0),
+  understandableScore: integer("understandable_score").default(0),
+  robustScore: integer("robust_score").default(0),
+  overallScore: integer("overall_score").default(0),
+  
+  // Detailed findings
+  colorContrastIssues: jsonb("color_contrast_issues"), // Array of color contrast problems
+  keyboardNavigationIssues: jsonb("keyboard_navigation_issues"), // Keyboard accessibility issues
+  screenReaderIssues: jsonb("screen_reader_issues"), // Screen reader compatibility issues
+  semanticMarkupIssues: jsonb("semantic_markup_issues"), // HTML semantic issues
+  focusManagementIssues: jsonb("focus_management_issues"), // Focus management problems
+  
+  // ARIA and Labels
+  ariaIssues: jsonb("aria_issues"), // ARIA implementation issues
+  altTextIssues: jsonb("alt_text_issues"), // Image alt text problems
+  headingStructureIssues: jsonb("heading_structure_issues"), // Heading hierarchy issues
+  labelingIssues: jsonb("labeling_issues"), // Form labeling issues
+  
+  // Performance related to accessibility
+  tabIndexIssues: jsonb("tab_index_issues"), // Tab order problems
+  animationIssues: jsonb("animation_issues"), // Motion and animation accessibility
+  
+  // Compliance levels
+  wcagALevel: boolean("wcag_a_level").default(false), // WCAG A compliance
+  wcagAALevel: boolean("wcag_aa_level").default(false), // WCAG AA compliance
+  wcagAAALevel: boolean("wcag_aaa_level").default(false), // WCAG AAA compliance
+  
+  // Audit metadata
+  status: text("status").notNull().default("pending"), // 'pending', 'processing', 'completed', 'failed'
+  auditDuration: integer("audit_duration"), // Time taken for audit in seconds
+  toolsUsed: jsonb("tools_used"), // Array of accessibility tools used
+  recommendations: jsonb("recommendations"), // Improvement recommendations
+  
+  // Gamification integration
+  pointsEarned: integer("points_earned").default(0), // Points awarded for running audit
+  badgesUnlocked: jsonb("badges_unlocked"), // Badges unlocked from this audit
+  pathProgress: jsonb("path_progress"), // Progress made on learning paths
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const projectsRelations = relations(projects, ({ many }) => ({
   applications: many(applications),
@@ -451,6 +503,12 @@ export const insertUserStatsSchema = createInsertSchema(userStats).omit({
   updatedAt: true,
 });
 
+export const insertAccessibilityAuditSchema = createInsertSchema(accessibilityAudits).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const selectAnalysisSchema = createSelectSchema(analyses);
 export const selectUserSessionSchema = createSelectSchema(userSessions);
 export const selectProjectSchema = createSelectSchema(projects);
@@ -464,6 +522,7 @@ export const selectUserProgressSchema = createSelectSchema(userProgress);
 export const selectAchievementSchema = createSelectSchema(achievements);
 export const selectUserAchievementSchema = createSelectSchema(userAchievements);
 export const selectUserStatsSchema = createSelectSchema(userStats);
+export const selectAccessibilityAuditSchema = createSelectSchema(accessibilityAudits);
 
 // Type exports
 export type UserStory = typeof userStories.$inferSelect;
@@ -482,6 +541,8 @@ export type Achievement = typeof achievements.$inferSelect;
 export type InsertAchievement = typeof insertAchievementSchema._type;
 export type UserAchievement = typeof userAchievements.$inferSelect;
 export type InsertUserAchievement = typeof insertUserAchievementSchema._type;
+export type AccessibilityAudit = typeof accessibilityAudits.$inferSelect;
+export type InsertAccessibilityAudit = typeof insertAccessibilityAuditSchema._type;
 export type UserStats = typeof userStats.$inferSelect;
 export type InsertUserStats = typeof insertUserStatsSchema._type;
 
