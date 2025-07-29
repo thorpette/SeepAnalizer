@@ -3,6 +3,8 @@ import {
   projects,
   applications,
   environments,
+  userStories,
+  storyAnalyses,
   type Analysis, 
   type InsertAnalysis, 
   type PerformanceAnalysis,
@@ -11,7 +13,11 @@ import {
   type Application,
   type InsertApplication,
   type Environment,
-  type InsertEnvironment
+  type InsertEnvironment,
+  type UserStory,
+  type InsertUserStory,
+  type StoryAnalysis,
+  type InsertStoryAnalysis
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -47,8 +53,24 @@ export interface IStorage {
   updateEnvironment(id: number, updates: Partial<Environment>): Promise<Environment | undefined>;
   deleteEnvironment(id: number): Promise<boolean>;
   
-  // Get project structure
+  // User Story management
+  createUserStory(userStory: InsertUserStory): Promise<UserStory>;
+  getUserStoriesByApplication(applicationId: number): Promise<UserStory[]>;
+  getUserStory(id: number): Promise<UserStory | undefined>;
+  updateUserStory(id: number, updates: Partial<UserStory>): Promise<UserStory | undefined>;
+  deleteUserStory(id: number): Promise<boolean>;
+  
+  // Story Analysis management
+  createStoryAnalysis(storyAnalysis: InsertStoryAnalysis): Promise<StoryAnalysis>;
+  getStoryAnalysesByStory(userStoryId: number): Promise<StoryAnalysis[]>;
+  getStoryAnalysesByEnvironment(environmentId: number): Promise<StoryAnalysis[]>;
+  getStoryAnalysis(id: number): Promise<StoryAnalysis | undefined>;
+  updateStoryAnalysis(id: number, updates: Partial<StoryAnalysis>): Promise<StoryAnalysis | undefined>;
+  deleteStoryAnalysis(id: number): Promise<boolean>;
+  
+  // Get project structure with stories
   getProjectStructure(): Promise<Project[]>;
+  getProjectStructureWithStories(): Promise<Project[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -313,6 +335,90 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
+  // User Story methods
+  async createUserStory(insertUserStory: InsertUserStory): Promise<UserStory> {
+    const [userStory] = await db
+      .insert(userStories)
+      .values(insertUserStory)
+      .returning();
+    return userStory;
+  }
+
+  async getUserStoriesByApplication(applicationId: number): Promise<UserStory[]> {
+    return await db.select().from(userStories).where(eq(userStories.applicationId, applicationId));
+  }
+
+  async getUserStory(id: number): Promise<UserStory | undefined> {
+    const [userStory] = await db.select().from(userStories).where(eq(userStories.id, id));
+    return userStory || undefined;
+  }
+
+  async updateUserStory(id: number, updates: Partial<UserStory>): Promise<UserStory | undefined> {
+    const [userStory] = await db
+      .update(userStories)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(userStories.id, id))
+      .returning();
+    return userStory || undefined;
+  }
+
+  async deleteUserStory(id: number): Promise<boolean> {
+    try {
+      await db.delete(userStories).where(eq(userStories.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting user story:', error);
+      return false;
+    }
+  }
+
+  // Story Analysis methods
+  async createStoryAnalysis(insertStoryAnalysis: InsertStoryAnalysis): Promise<StoryAnalysis> {
+    const [storyAnalysis] = await db
+      .insert(storyAnalyses)
+      .values(insertStoryAnalysis)
+      .returning();
+    return storyAnalysis;
+  }
+
+  async getStoryAnalysesByStory(userStoryId: number): Promise<StoryAnalysis[]> {
+    return await db.select().from(storyAnalyses).where(eq(storyAnalyses.userStoryId, userStoryId));
+  }
+
+  async getStoryAnalysesByEnvironment(environmentId: number): Promise<StoryAnalysis[]> {
+    return await db.select().from(storyAnalyses).where(eq(storyAnalyses.environmentId, environmentId));
+  }
+
+  async getStoryAnalysis(id: number): Promise<StoryAnalysis | undefined> {
+    const [storyAnalysis] = await db.select().from(storyAnalyses).where(eq(storyAnalyses.id, id));
+    return storyAnalysis || undefined;
+  }
+
+  async updateStoryAnalysis(id: number, updates: Partial<StoryAnalysis>): Promise<StoryAnalysis | undefined> {
+    const [storyAnalysis] = await db
+      .update(storyAnalyses)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(storyAnalyses.id, id))
+      .returning();
+    return storyAnalysis || undefined;
+  }
+
+  async deleteStoryAnalysis(id: number): Promise<boolean> {
+    try {
+      await db.delete(storyAnalyses).where(eq(storyAnalyses.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting story analysis:', error);
+      return false;
+    }
+  }
+
   async getProjectStructure(): Promise<Project[]> {
     return await db.query.projects.findMany({
       with: {
@@ -323,6 +429,26 @@ export class DatabaseStorage implements IStorage {
         },
       },
     });
+  }
+
+  // Get project structure including user stories
+  async getProjectStructureWithStories(): Promise<Project[]> {
+    const projectsWithStoriesAndApps = await db.query.projects.findMany({
+      with: {
+        applications: {
+          with: {
+            environments: true,
+            userStories: {
+              with: {
+                storyAnalyses: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    
+    return projectsWithStoriesAndApps;
   }
 }
 
@@ -400,6 +526,18 @@ export class MemStorage implements IStorage {
   async updateEnvironment(): Promise<any> { return undefined; }
   async deleteEnvironment(): Promise<boolean> { return false; }
   async getProjectStructure(): Promise<any[]> { return []; }
+  async createUserStory(): Promise<any> { throw new Error('User stories not supported in MemStorage'); }
+  async getUserStoriesByApplication(): Promise<any[]> { return []; }
+  async getUserStory(): Promise<any> { return undefined; }
+  async updateUserStory(): Promise<any> { return undefined; }
+  async deleteUserStory(): Promise<boolean> { return false; }
+  async createStoryAnalysis(): Promise<any> { throw new Error('Story analysis not supported in MemStorage'); }
+  async getStoryAnalysesByStory(): Promise<any[]> { return []; }
+  async getStoryAnalysesByEnvironment(): Promise<any[]> { return []; }
+  async getStoryAnalysis(): Promise<any> { return undefined; }
+  async updateStoryAnalysis(): Promise<any> { return undefined; }
+  async deleteStoryAnalysis(): Promise<boolean> { return false; }
+  async getProjectStructureWithStories(): Promise<any[]> { return []; }
 }
 
 // Use DatabaseStorage as default

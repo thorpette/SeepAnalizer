@@ -593,6 +593,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User Stories CRUD Operations
+  app.post("/api/user-stories", async (req, res) => {
+    try {
+      const { applicationId, title, description, acceptanceCriteria, priority, status, storyPoints, testUrl, isActive } = req.body;
+      const userStory = await storage.createUserStory({ 
+        applicationId, title, description, acceptanceCriteria, priority, status, storyPoints, testUrl, isActive 
+      });
+      res.json(userStory);
+    } catch (error) {
+      console.error('Error creating user story:', error);
+      res.status(500).json({ error: "Error creando historia de usuario" });
+    }
+  });
+
+  app.get("/api/user-stories/application/:applicationId", async (req, res) => {
+    try {
+      const applicationId = parseInt(req.params.applicationId);
+      const userStories = await storage.getUserStoriesByApplication(applicationId);
+      res.json(userStories);
+    } catch (error) {
+      console.error('Error fetching user stories:', error);
+      res.status(500).json({ error: "Error obteniendo historias de usuario" });
+    }
+  });
+
+  app.put("/api/user-stories/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { title, description, acceptanceCriteria, priority, status, storyPoints, testUrl, isActive } = req.body;
+      const userStory = await storage.updateUserStory(id, { 
+        title, description, acceptanceCriteria, priority, status, storyPoints, testUrl, isActive 
+      });
+      res.json(userStory);
+    } catch (error) {
+      console.error('Error updating user story:', error);
+      res.status(500).json({ error: "Error actualizando historia de usuario" });
+    }
+  });
+
+  app.delete("/api/user-stories/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteUserStory(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting user story:', error);
+      res.status(500).json({ error: "Error eliminando historia de usuario" });
+    }
+  });
+
+  // Story Analysis CRUD Operations
+  app.post("/api/story-analyses", async (req, res) => {
+    try {
+      const { userStoryId, environmentId, analysisId, testStatus, testDuration, functionalTestPassed, 
+              performanceBaseline, performanceActual, performanceDelta, criticalIssues, 
+              recommendations, testNotes, testerName } = req.body;
+      
+      const storyAnalysis = await storage.createStoryAnalysis({ 
+        userStoryId, environmentId, analysisId, testStatus, testDuration, functionalTestPassed,
+        performanceBaseline, performanceActual, performanceDelta, criticalIssues,
+        recommendations, testNotes, testerName
+      });
+      res.json(storyAnalysis);
+    } catch (error) {
+      console.error('Error creating story analysis:', error);
+      res.status(500).json({ error: "Error creando análisis de historia" });
+    }
+  });
+
+  app.get("/api/story-analyses/story/:userStoryId", async (req, res) => {
+    try {
+      const userStoryId = parseInt(req.params.userStoryId);
+      const storyAnalyses = await storage.getStoryAnalysesByStory(userStoryId);
+      res.json(storyAnalyses);
+    } catch (error) {
+      console.error('Error fetching story analyses by story:', error);
+      res.status(500).json({ error: "Error obteniendo análisis por historia" });
+    }
+  });
+
+  app.get("/api/story-analyses/environment/:environmentId", async (req, res) => {
+    try {
+      const environmentId = parseInt(req.params.environmentId);
+      const storyAnalyses = await storage.getStoryAnalysesByEnvironment(environmentId);
+      res.json(storyAnalyses);
+    } catch (error) {
+      console.error('Error fetching story analyses by environment:', error);
+      res.status(500).json({ error: "Error obteniendo análisis por entorno" });
+    }
+  });
+
+  app.put("/api/story-analyses/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { testStatus, testDuration, functionalTestPassed, performanceBaseline, 
+              performanceActual, performanceDelta, criticalIssues, recommendations, 
+              testNotes, testerName } = req.body;
+      
+      const storyAnalysis = await storage.updateStoryAnalysis(id, { 
+        testStatus, testDuration, functionalTestPassed, performanceBaseline,
+        performanceActual, performanceDelta, criticalIssues, recommendations,
+        testNotes, testerName
+      });
+      res.json(storyAnalysis);
+    } catch (error) {
+      console.error('Error updating story analysis:', error);
+      res.status(500).json({ error: "Error actualizando análisis de historia" });
+    }
+  });
+
+  app.delete("/api/story-analyses/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteStoryAnalysis(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting story analysis:', error);
+      res.status(500).json({ error: "Error eliminando análisis de historia" });
+    }
+  });
+
+  // Get project structure with stories
+  app.get("/api/project-structure-with-stories", async (req, res) => {
+    try {
+      const structure = await storage.getProjectStructureWithStories();
+      res.json(structure);
+    } catch (error) {
+      console.error("Error fetching project structure with stories:", error);
+      res.status(500).json({ error: "Error al obtener estructura con historias" });
+    }
+  });
+
   // Servir documento de diseño funcional
   app.get('/design-document', (req, res) => {
     const fs = require('fs');

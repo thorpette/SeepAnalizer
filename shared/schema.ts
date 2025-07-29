@@ -14,6 +14,7 @@ export const analyses = pgTable("analyses", {
   projectId: integer("project_id").references(() => projects.id),
   applicationId: integer("application_id").references(() => applications.id),
   environmentId: integer("environment_id").references(() => environments.id),
+  userStoryId: integer("user_story_id").references(() => userStories.id), // Optional: for story-specific analysis
   
   // Performance scores (0-100)
   performanceScore: integer("performance_score"),
@@ -103,6 +104,10 @@ export const applications = pgTable("applications", {
   projectId: integer("project_id").references(() => projects.id).notNull(),
   name: text("name").notNull(),
   description: text("description"),
+  technology: text("technology").notNull().default("web"), // "spring", "web", "react", "angular", etc.
+  springProfile: text("spring_profile"), // Spring specific profile (dev, test, prod)
+  springConfigServer: text("spring_config_server"), // Spring Cloud Config server URL
+  isSpringBoot: boolean("is_spring_boot").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -120,6 +125,52 @@ export const environments = pgTable("environments", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// User stories for applications
+export const userStories = pgTable("user_stories", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id").references(() => applications.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  acceptanceCriteria: text("acceptance_criteria"),
+  priority: text("priority").notNull().default("medium"), // "low", "medium", "high", "critical"
+  status: text("status").notNull().default("pending"), // "pending", "in-progress", "testing", "done"
+  storyPoints: integer("story_points"),
+  testUrl: text("test_url"), // Specific URL path for testing this story
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Performance analysis results for user stories in specific environments
+export const storyAnalyses = pgTable("story_analyses", {
+  id: serial("id").primaryKey(),
+  userStoryId: integer("user_story_id").references(() => userStories.id).notNull(),
+  environmentId: integer("environment_id").references(() => environments.id).notNull(),
+  analysisId: integer("analysis_id").references(() => analyses.id), // Reference to main analysis
+  
+  // Test execution details
+  testExecutedAt: timestamp("test_executed_at").defaultNow(),
+  testStatus: text("test_status").notNull().default("pending"), // "pending", "running", "passed", "failed", "error"
+  testDuration: decimal("test_duration"), // Test execution time in seconds
+  
+  // Story-specific performance metrics
+  functionalTestPassed: boolean("functional_test_passed"),
+  performanceBaseline: integer("performance_baseline"), // Expected performance score
+  performanceActual: integer("performance_actual"), // Actual performance score
+  performanceDelta: integer("performance_delta"), // Difference from baseline
+  
+  // Story-specific issues and recommendations
+  criticalIssues: jsonb("critical_issues"), // Array of critical performance issues found
+  recommendations: jsonb("recommendations"), // Story-specific optimization recommendations
+  
+  // Test metadata
+  testNotes: text("test_notes"),
+  testerName: text("tester_name"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const projectsRelations = relations(projects, ({ many }) => ({
   applications: many(applications),
@@ -131,6 +182,7 @@ export const applicationsRelations = relations(applications, ({ one, many }) => 
     references: [projects.id],
   }),
   environments: many(environments),
+  userStories: many(userStories),
 }));
 
 export const environmentsRelations = relations(environments, ({ one, many }) => ({
@@ -139,6 +191,31 @@ export const environmentsRelations = relations(environments, ({ one, many }) => 
     references: [applications.id],
   }),
   analyses: many(analyses),
+  storyAnalyses: many(storyAnalyses),
+}));
+
+export const userStoriesRelations = relations(userStories, ({ one, many }) => ({
+  application: one(applications, {
+    fields: [userStories.applicationId],
+    references: [applications.id],
+  }),
+  storyAnalyses: many(storyAnalyses),
+  analyses: many(analyses),
+}));
+
+export const storyAnalysesRelations = relations(storyAnalyses, ({ one }) => ({
+  userStory: one(userStories, {
+    fields: [storyAnalyses.userStoryId],
+    references: [userStories.id],
+  }),
+  environment: one(environments, {
+    fields: [storyAnalyses.environmentId],
+    references: [environments.id],
+  }),
+  analysis: one(analyses, {
+    fields: [storyAnalyses.analysisId],
+    references: [analyses.id],
+  }),
 }));
 
 export const analysesRelations = relations(analyses, ({ one }) => ({
@@ -153,6 +230,10 @@ export const analysesRelations = relations(analyses, ({ one }) => ({
   environment: one(environments, {
     fields: [analyses.environmentId],
     references: [environments.id],
+  }),
+  userStory: one(userStories, {
+    fields: [analyses.userStoryId],
+    references: [userStories.id],
   }),
 }));
 
@@ -185,11 +266,31 @@ export const insertEnvironmentSchema = createInsertSchema(environments).omit({
   updatedAt: true,
 });
 
+export const insertUserStorySchema = createInsertSchema(userStories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertStoryAnalysisSchema = createInsertSchema(storyAnalyses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const selectAnalysisSchema = createSelectSchema(analyses);
 export const selectUserSessionSchema = createSelectSchema(userSessions);
 export const selectProjectSchema = createSelectSchema(projects);
 export const selectApplicationSchema = createSelectSchema(applications);
 export const selectEnvironmentSchema = createSelectSchema(environments);
+export const selectUserStorySchema = createSelectSchema(userStories);
+export const selectStoryAnalysisSchema = createSelectSchema(storyAnalyses);
+
+// Type exports
+export type UserStory = typeof userStories.$inferSelect;
+export type InsertUserStory = typeof insertUserStorySchema._type;
+export type StoryAnalysis = typeof storyAnalyses.$inferSelect;
+export type InsertStoryAnalysis = typeof insertStoryAnalysisSchema._type;
 
 // Legacy compatibility schemas for existing components
 export const performanceAnalysisSchema = z.object({
