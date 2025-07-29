@@ -539,6 +539,408 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simple test endpoint first
+  app.get("/api/test-report", (req, res) => {
+    res.json({ message: "Test report endpoint works", timestamp: new Date().toISOString() });
+  });
+
+  // Comprehensive analysis report endpoint
+  app.get("/api/report/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log(`🔍 Generating integrated report for analysis ID: ${id}`);
+      
+      const analysis = await storage.getAnalysisLegacy(id);
+
+      if (!analysis) {
+        console.log(`❌ Analysis ${id} not found`);
+        return res.status(404).json({ message: "Analysis not found" });
+      }
+
+      if (analysis.status !== 'completed') {
+        console.log(`⏳ Analysis ${id} not completed yet (status: ${analysis.status})`);
+        return res.status(400).json({ message: "Analysis not completed yet" });
+      }
+
+      console.log(`✅ Generating comprehensive report for ${analysis.url}`);
+      
+      // Generate comprehensive integrated report
+      const report = generateIntegratedReport(analysis);
+      
+      res.json(report);
+    } catch (error) {
+      console.error('❌ Report generation error:', error);
+      res.status(500).json({ message: "Internal server error", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Generate comprehensive integrated report combining frontend and backend analysis
+function generateIntegratedReport(analysis: any) {
+  const { metrics, backendAnalysis, resourceDetails, recommendations: recommendationsArr = [] } = analysis;
+  
+  // Calculate performance insights
+  const performanceInsights = {
+    overall_health: calculateOverallHealth(analysis),
+    critical_issues: identifyCriticalIssues(analysis),
+    optimization_opportunities: identifyOptimizationOpportunities(analysis),
+    security_assessment: assessSecurityPosture(analysis)
+  };
+
+  // Frontend performance analysis
+  const frontendAnalysis = {
+    core_web_vitals: {
+      fcp: {
+        value: metrics.firstContentfulPaint,
+        status: metrics.firstContentfulPaint < 1800 ? 'good' : metrics.firstContentfulPaint < 3000 ? 'needs_improvement' : 'poor',
+        description: 'Tiempo hasta que aparece el primer contenido visual'
+      },
+      lcp: {
+        value: metrics.largestContentfulPaint,
+        status: metrics.largestContentfulPaint < 2500 ? 'good' : metrics.largestContentfulPaint < 4000 ? 'needs_improvement' : 'poor',
+        description: 'Tiempo hasta que se carga el elemento principal'
+      },
+      tbt: {
+        value: metrics.totalBlockingTime,
+        status: metrics.totalBlockingTime < 200 ? 'good' : metrics.totalBlockingTime < 600 ? 'needs_improvement' : 'poor',
+        description: 'Tiempo total que la página está bloqueada para interacción'
+      },
+      cls: {
+        value: metrics.cumulativeLayoutShift,
+        status: metrics.cumulativeLayoutShift < 0.1 ? 'good' : metrics.cumulativeLayoutShift < 0.25 ? 'needs_improvement' : 'poor',
+        description: 'Estabilidad visual de la página durante la carga'
+      }
+    },
+    resource_efficiency: {
+      page_size: {
+        value: resourceDetails.pageSize,
+        efficiency: resourceDetails.pageSize < 1000000 ? 'excellent' : resourceDetails.pageSize < 3000000 ? 'good' : 'needs_improvement',
+        description: 'Tamaño total de la página en bytes'
+      },
+      request_count: {
+        value: resourceDetails.requestCount,
+        efficiency: resourceDetails.requestCount < 50 ? 'excellent' : resourceDetails.requestCount < 100 ? 'good' : 'needs_improvement',
+        description: 'Número total de peticiones HTTP'
+      }
+    }
+  };
+
+  // Backend infrastructure analysis
+  const backendInfrastructure = {
+    server_performance: {
+      response_time: {
+        value: backendAnalysis.responseTime,
+        status: backendAnalysis.responseTime < 200 ? 'excellent' : backendAnalysis.responseTime < 500 ? 'good' : 'slow',
+        description: 'Tiempo de respuesta del servidor en milisegundos'
+      },
+      technology_stack: {
+        server: backendAnalysis.serverTechnology,
+        http_version: backendAnalysis.httpVersion,
+        compression: backendAnalysis.compressionEnabled ? 'enabled' : 'disabled'
+      }
+    },
+    security_headers: {
+      https_status: {
+        enabled: backendAnalysis.securityHeaders.hasHTTPS,
+        impact: 'critical',
+        description: 'Cifrado SSL/TLS activo'
+      },
+      hsts_status: {
+        enabled: backendAnalysis.securityHeaders.hasHSTS,
+        impact: 'high',
+        description: 'HTTP Strict Transport Security'
+      },
+      csp_status: {
+        enabled: backendAnalysis.securityHeaders.hasCSP,
+        impact: 'medium',
+        description: 'Content Security Policy'
+      },
+      frame_protection: {
+        enabled: backendAnalysis.securityHeaders.hasXFrameOptions,
+        impact: 'medium',
+        description: 'Protección contra clickjacking'
+      }
+    },
+    caching_strategy: {
+      cache_control: {
+        enabled: backendAnalysis.cacheHeaders.hasCacheControl,
+        impact: 'high',
+        description: 'Control de caché HTTP'
+      },
+      etag: {
+        enabled: backendAnalysis.cacheHeaders.hasETag,
+        impact: 'medium',
+        description: 'Validación de caché con ETag'
+      },
+      last_modified: {
+        enabled: backendAnalysis.cacheHeaders.hasLastModified,
+        impact: 'low',
+        description: 'Validación de caché con Last-Modified'
+      }
+    }
+  };
+
+  // Integrated recommendations based on both frontend and backend
+  const integratedRecommendations = generateIntegratedRecommendations(analysis);
+
+  // Performance correlation analysis
+  const correlationAnalysis = {
+    frontend_backend_correlation: analyzeFrontendBackendCorrelation(analysis),
+    bottleneck_identification: identifyBottlenecks(analysis),
+    optimization_priority: prioritizeOptimizations(analysis)
+  };
+
+  return {
+    summary: {
+      url: analysis.url,
+      analyzed_at: analysis.analyzedAt,
+      overall_score: Math.round((analysis.performanceScore + analysis.accessibilityScore + analysis.bestPracticesScore + analysis.seoScore) / 4),
+      performance_level: performanceInsights.overall_health
+    },
+    frontend_analysis: frontendAnalysis,
+    backend_infrastructure: backendInfrastructure,
+    performance_insights: performanceInsights,
+    correlation_analysis: correlationAnalysis,
+    integrated_recommendations: integratedRecommendations,
+    technical_details: {
+      device_tested: analysis.device,
+      analysis_duration: '~3 seconds',
+      ruby_agent_used: backendAnalysis.serverTechnology !== 'Unknown'
+    }
+  };
+}
+
+function calculateOverallHealth(analysis: any) {
+  const avgScore = (analysis.performanceScore + analysis.accessibilityScore + analysis.bestPracticesScore + analysis.seoScore) / 4;
+  
+  if (avgScore >= 90) return 'excellent';
+  if (avgScore >= 75) return 'good';
+  if (avgScore >= 50) return 'needs_improvement';
+  return 'poor';
+}
+
+function identifyCriticalIssues(analysis: any) {
+  const issues = [];
+  
+  if (!analysis.backendAnalysis.securityHeaders.hasHTTPS) {
+    issues.push({
+      type: 'security',
+      severity: 'critical',
+      issue: 'Falta HTTPS',
+      impact: 'Datos no cifrados, penalización SEO'
+    });
+  }
+  
+  if (analysis.metrics.largestContentfulPaint > 4000) {
+    issues.push({
+      type: 'performance',
+      severity: 'critical',
+      issue: 'LCP muy lento',
+      impact: 'Experiencia de usuario deficiente'
+    });
+  }
+  
+  if (analysis.backendAnalysis.responseTime > 1000) {
+    issues.push({
+      type: 'performance',
+      severity: 'high',
+      issue: 'Servidor lento',
+      impact: 'Retrasos en toda la experiencia'
+    });
+  }
+  
+  return issues;
+}
+
+function identifyOptimizationOpportunities(analysis: any) {
+  const opportunities = [];
+  
+  if (!analysis.backendAnalysis.compressionEnabled) {
+    opportunities.push({
+      type: 'compression',
+      potential_savings: '20-70% reducción de tamaño',
+      effort: 'low',
+      description: 'Activar compresión gzip/brotli'
+    });
+  }
+  
+  if (analysis.resourceDetails.requestCount > 100) {
+    opportunities.push({
+      type: 'resource_optimization',
+      potential_savings: '30-50% menos peticiones',
+      effort: 'medium',
+      description: 'Combinar y minimizar recursos'
+    });
+  }
+  
+  if (!analysis.backendAnalysis.cacheHeaders.hasCacheControl) {
+    opportunities.push({
+      type: 'caching',
+      potential_savings: '50-90% carga repetida más rápida',
+      effort: 'low',
+      description: 'Configurar headers de caché'
+    });
+  }
+  
+  return opportunities;
+}
+
+function assessSecurityPosture(analysis: any) {
+  const security = analysis.backendAnalysis.securityHeaders;
+  const score = (
+    (security.hasHTTPS ? 40 : 0) +
+    (security.hasHSTS ? 25 : 0) +
+    (security.hasCSP ? 20 : 0) +
+    (security.hasXFrameOptions ? 15 : 0)
+  );
+  
+  return {
+    score: score,
+    level: score >= 80 ? 'strong' : score >= 60 ? 'adequate' : score >= 40 ? 'basic' : 'weak',
+    missing_protections: [
+      ...(!security.hasHTTPS ? ['HTTPS'] : []),
+      ...(!security.hasHSTS ? ['HSTS'] : []),
+      ...(!security.hasCSP ? ['CSP'] : []),
+      ...(!security.hasXFrameOptions ? ['X-Frame-Options'] : [])
+    ]
+  };
+}
+
+function analyzeFrontendBackendCorrelation(analysis: any) {
+  const serverTime = analysis.backendAnalysis.responseTime;
+  const frontendTime = analysis.metrics.firstContentfulPaint;
+  
+  const serverImpact = (serverTime / frontendTime) * 100;
+  
+  return {
+    server_impact_percentage: Math.min(serverImpact, 100),
+    analysis: serverImpact > 50 ? 
+      'El servidor es el principal cuello de botella' :
+      serverImpact > 25 ?
+      'El servidor contribuye significativamente al tiempo de carga' :
+      'El rendimiento está principalmente limitado por el frontend'
+  };
+}
+
+function identifyBottlenecks(analysis: any) {
+  const bottlenecks = [];
+  
+  if (analysis.backendAnalysis.responseTime > 500) {
+    bottlenecks.push({
+      type: 'server_response',
+      severity: 'high',
+      description: 'Tiempo de respuesta del servidor elevado'
+    });
+  }
+  
+  if (analysis.resourceDetails.pageSize > 3000000) {
+    bottlenecks.push({
+      type: 'page_size',
+      severity: 'medium',
+      description: 'Tamaño de página excesivo'
+    });
+  }
+  
+  if (analysis.metrics.totalBlockingTime > 300) {
+    bottlenecks.push({
+      type: 'javascript_blocking',
+      severity: 'high',
+      description: 'JavaScript bloquea la interacción'
+    });
+  }
+  
+  return bottlenecks;
+}
+
+function prioritizeOptimizations(analysis: any) {
+  const priorities = [];
+  
+  // High priority: Critical performance issues
+  if (analysis.backendAnalysis.responseTime > 1000) {
+    priorities.push({
+      priority: 1,
+      action: 'Optimizar rendimiento del servidor',
+      impact: 'high',
+      effort: 'high'
+    });
+  }
+  
+  // Medium priority: Easy wins
+  if (!analysis.backendAnalysis.compressionEnabled) {
+    priorities.push({
+      priority: 2,
+      action: 'Activar compresión de texto',
+      impact: 'medium',
+      effort: 'low'
+    });
+  }
+  
+  // Lower priority: Progressive enhancements
+  if (!analysis.backendAnalysis.securityHeaders.hasHSTS) {
+    priorities.push({
+      priority: 3,
+      action: 'Implementar HSTS',
+      impact: 'low',
+      effort: 'low'
+    });
+  }
+  
+  return priorities.sort((a, b) => a.priority - b.priority);
+}
+
+function generateIntegratedRecommendations(analysis: any) {
+  const recommendations = [];
+  
+  // Server-side optimizations
+  if (analysis.backendAnalysis.responseTime > 500) {
+    recommendations.push({
+      category: 'servidor',
+      title: 'Optimizar tiempo de respuesta del servidor',
+      description: `El servidor responde en ${analysis.backendAnalysis.responseTime}ms. Optimiza consultas de base de datos, usa caché de aplicación, y considera un CDN.`,
+      impact: 'alto',
+      effort: 'medio',
+      technical_details: {
+        current_response_time: analysis.backendAnalysis.responseTime,
+        target_response_time: 200,
+        suggested_technologies: ['Redis cache', 'Database indexing', 'CDN']
+      }
+    });
+  }
+  
+  // Frontend optimizations
+  if (analysis.metrics.largestContentfulPaint > 2500) {
+    recommendations.push({
+      category: 'frontend',
+      title: 'Mejorar Largest Contentful Paint',
+      description: `El elemento principal tarda ${analysis.metrics.largestContentfulPaint}ms en cargar. Optimiza imágenes, usa lazy loading, y mejora la priorización de recursos.`,
+      impact: 'alto',
+      effort: 'medio',
+      technical_details: {
+        current_lcp: analysis.metrics.largestContentfulPaint,
+        target_lcp: 2500,
+        suggested_techniques: ['Image optimization', 'Resource prioritization', 'Lazy loading']
+      }
+    });
+  }
+  
+  // Security improvements
+  if (!analysis.backendAnalysis.securityHeaders.hasHTTPS) {
+    recommendations.push({
+      category: 'seguridad',
+      title: 'Implementar HTTPS',
+      description: 'El sitio no usa HTTPS. Esto afecta la seguridad, confianza del usuario y ranking en buscadores.',
+      impact: 'crítico',
+      effort: 'bajo',
+      technical_details: {
+        implementation: 'SSL certificate installation',
+        redirect_http: true,
+        hsts_header: true
+      }
+    });
+  }
+  
+  return recommendations;
 }
