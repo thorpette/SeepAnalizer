@@ -107,7 +107,7 @@ export default function ProjectAdmin() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editingApplication, setEditingApplication] = useState<Application | null>(null);
   const [editingEnvironment, setEditingEnvironment] = useState<Environment | null>(null);
-  const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
   // Fetch projects with all related data
   const { data: projects = [], isLoading, refetch } = useQuery<Project[]>({
@@ -115,17 +115,20 @@ export default function ProjectAdmin() {
     initialData: [],
   });
 
-  // Fetch user stories for selected application
+  // Get selected project data
+  const selectedProject = projects.find(p => p.id === selectedProjectId);
+
+  // Fetch user stories for selected project
   const { data: userStories = [], isLoading: isLoadingStories } = useQuery<UserStory[]>({
-    queryKey: ['/api/user-stories/application', selectedApplicationId],
-    enabled: !!selectedApplicationId && (activeTab === 'stories' || activeTab === 'analyses'),
+    queryKey: ['/api/user-stories/project', selectedProjectId],
+    enabled: !!selectedProjectId && (activeTab === 'stories' || activeTab === 'analyses'),
     initialData: [],
   });
 
-  // Fetch story analyses
+  // Fetch story analyses for selected project
   const { data: storyAnalyses = [], isLoading: isLoadingAnalyses } = useQuery<StoryAnalysis[]>({
-    queryKey: ['/api/story-analyses'],
-    enabled: activeTab === 'analyses',
+    queryKey: ['/api/story-analyses/project', selectedProjectId],
+    enabled: !!selectedProjectId && activeTab === 'analyses',
     initialData: [],
   });
 
@@ -376,13 +379,45 @@ export default function ProjectAdmin() {
         </div>
 
         {/* Main Content */}
+        {/* Project Selector */}
+        {projects.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Seleccionar Proyecto</CardTitle>
+              <CardDescription>
+                Selecciona un proyecto para gestionar sus aplicaciones, entornos, historias y análisis
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Select value={selectedProjectId?.toString() || ""} onValueChange={(value) => setSelectedProjectId(parseInt(value))}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona un proyecto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map(project => (
+                    <SelectItem key={project.id} value={project.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <Building className="w-4 h-4" />
+                        {project.name}
+                        <Badge variant="outline" className="ml-2">
+                          {project.applications.length} app{project.applications.length !== 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="projects">🏢 Proyectos</TabsTrigger>
-            <TabsTrigger value="applications">📱 Aplicaciones</TabsTrigger>
-            <TabsTrigger value="environments">🌐 Entornos</TabsTrigger>
-            <TabsTrigger value="stories">📚 Historias</TabsTrigger>
-            <TabsTrigger value="analyses">📊 Análisis</TabsTrigger>
+            <TabsTrigger value="applications" disabled={!selectedProjectId}>📱 Aplicaciones</TabsTrigger>
+            <TabsTrigger value="environments" disabled={!selectedProjectId}>🌐 Entornos</TabsTrigger>
+            <TabsTrigger value="stories" disabled={!selectedProjectId}>📚 Historias</TabsTrigger>
+            <TabsTrigger value="analyses" disabled={!selectedProjectId}>📊 Análisis</TabsTrigger>
           </TabsList>
           
           {/* Projects Tab */}
@@ -399,66 +434,69 @@ export default function ProjectAdmin() {
 
           {/* Applications Tab */}
           <TabsContent value="applications" className="mt-6">
-            <ApplicationsManager 
-              projects={projects}
-              editingApplication={editingApplication}
-              setEditingApplication={setEditingApplication}
-              createApplicationMutation={createApplicationMutation}
-              updateApplicationMutation={updateApplicationMutation}
-              deleteApplicationMutation={deleteApplicationMutation}
-            />
+            {!selectedProjectId ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center py-8 text-gray-500">
+                    <Server className="mx-auto h-12 w-12 mb-4" />
+                    <p>Selecciona un proyecto para gestionar sus aplicaciones</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <ApplicationsManager 
+                projects={[selectedProject!].filter(Boolean)}
+                editingApplication={editingApplication}
+                setEditingApplication={setEditingApplication}
+                createApplicationMutation={createApplicationMutation}
+                updateApplicationMutation={updateApplicationMutation}
+                deleteApplicationMutation={deleteApplicationMutation}
+              />
+            )}
           </TabsContent>
 
           {/* Environments Tab */}
           <TabsContent value="environments" className="mt-6">
-            <EnvironmentsManager 
-              projects={projects}
-              editingEnvironment={editingEnvironment}
-              setEditingEnvironment={setEditingEnvironment}
-              createEnvironmentMutation={createEnvironmentMutation}
-              updateEnvironmentMutation={updateEnvironmentMutation}
-              deleteEnvironmentMutation={deleteEnvironmentMutation}
-              getEnvironmentBadgeColor={getEnvironmentBadgeColor}
-            />
+            {!selectedProjectId ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center py-8 text-gray-500">
+                    <Globe className="mx-auto h-12 w-12 mb-4" />
+                    <p>Selecciona un proyecto para gestionar sus entornos</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <EnvironmentsManager 
+                projects={[selectedProject!].filter(Boolean)}
+                editingEnvironment={editingEnvironment}
+                setEditingEnvironment={setEditingEnvironment}
+                createEnvironmentMutation={createEnvironmentMutation}
+                updateEnvironmentMutation={updateEnvironmentMutation}
+                deleteEnvironmentMutation={deleteEnvironmentMutation}
+                getEnvironmentBadgeColor={getEnvironmentBadgeColor}
+              />
+            )}
           </TabsContent>
 
           {/* User Stories Tab */}
           <TabsContent value="stories" className="mt-6">
             <div className="space-y-6">
-              {/* Application Selector */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Seleccionar Aplicación</CardTitle>
-                  <CardDescription>
-                    Selecciona una aplicación para gestionar sus historias de usuario
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Select value={selectedApplicationId?.toString() || ""} onValueChange={(value) => setSelectedApplicationId(parseInt(value))}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecciona una aplicación" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projects.flatMap(project => 
-                        project.applications.map(app => (
-                          <SelectItem key={app.id} value={app.id.toString()}>
-                            {project.name} → {app.name}
-                            {app.technology === 'spring' && <Badge variant="outline" className="ml-2">Spring</Badge>}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </CardContent>
-              </Card>
-
-              {/* User Stories List */}
-              {selectedApplicationId && (
+              {!selectedProjectId ? (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center py-8 text-gray-500">
+                      <BookOpen className="mx-auto h-12 w-12 mb-4" />
+                      <p>Selecciona un proyecto para ver sus historias de usuario</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
                 <Card>
                   <CardHeader>
                     <CardTitle>Historias de Usuario</CardTitle>
                     <CardDescription>
-                      Gestiona las historias de usuario para la aplicación seleccionada
+                      Historias de usuario del proyecto: {selectedProject?.name}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -467,47 +505,67 @@ export default function ProjectAdmin() {
                     ) : userStories.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
                         <BookOpen className="mx-auto h-12 w-12 mb-4" />
-                        <p>No hay historias de usuario para esta aplicación</p>
+                        <p>No hay historias de usuario para este proyecto</p>
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {userStories.map((story) => (
-                          <div key={story.id} className="border rounded-lg p-4">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-medium text-gray-900">{story.title}</h4>
-                                <p className="text-sm text-gray-600 mt-1">{story.description}</p>
-                                <div className="flex items-center gap-2 mt-3">
-                                  <Badge variant={
-                                    story.priority === 'critical' ? 'destructive' :
-                                    story.priority === 'high' ? 'default' :
-                                    story.priority === 'medium' ? 'secondary' : 'outline'
-                                  }>
-                                    {story.priority}
-                                  </Badge>
-                                  <Badge variant={
-                                    story.status === 'done' ? 'default' :
-                                    story.status === 'testing' ? 'secondary' :
-                                    story.status === 'in-progress' ? 'outline' : 'outline'
-                                  }>
-                                    {story.status === 'done' && <CheckCircle className="w-3 h-3 mr-1" />}
-                                    {story.status === 'in-progress' && <Clock className="w-3 h-3 mr-1" />}
-                                    {story.status}
-                                  </Badge>
-                                  {story.storyPoints && (
-                                    <Badge variant="outline">{story.storyPoints} pts</Badge>
+                        {userStories.map((story) => {
+                          // Find the application this story belongs to
+                          const application = selectedProject?.applications.find(app => app.id === story.applicationId);
+                          
+                          return (
+                            <div key={story.id} className="border rounded-lg p-4">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <h4 className="font-medium text-gray-900">{story.title}</h4>
+                                    {application && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {application.name}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-gray-600 mt-1">{story.description}</p>
+                                  
+                                  {story.acceptanceCriteria && (
+                                    <div className="mt-2">
+                                      <p className="text-xs font-medium text-gray-700">Criterios de Aceptación:</p>
+                                      <p className="text-xs text-gray-600">{story.acceptanceCriteria}</p>
+                                    </div>
                                   )}
-                                  {story.testUrl && (
-                                    <Badge variant="outline">
-                                      <Globe className="w-3 h-3 mr-1" />
-                                      {story.testUrl}
+                                  
+                                  <div className="flex items-center gap-2 mt-3">
+                                    <Badge variant={
+                                      story.priority === 'critical' ? 'destructive' :
+                                      story.priority === 'high' ? 'default' :
+                                      story.priority === 'medium' ? 'secondary' : 'outline'
+                                    }>
+                                      {story.priority}
                                     </Badge>
-                                  )}
+                                    <Badge variant={
+                                      story.status === 'done' ? 'default' :
+                                      story.status === 'testing' ? 'secondary' :
+                                      story.status === 'in-progress' ? 'outline' : 'outline'
+                                    }>
+                                      {story.status === 'done' && <CheckCircle className="w-3 h-3 mr-1" />}
+                                      {story.status === 'in-progress' && <Clock className="w-3 h-3 mr-1" />}
+                                      {story.status}
+                                    </Badge>
+                                    {story.storyPoints && (
+                                      <Badge variant="outline">{story.storyPoints} pts</Badge>
+                                    )}
+                                    {story.testUrl && (
+                                      <Badge variant="outline">
+                                        <Globe className="w-3 h-3 mr-1" />
+                                        URL de prueba
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </CardContent>
@@ -519,107 +577,150 @@ export default function ProjectAdmin() {
           {/* Story Analyses Tab */}
           <TabsContent value="analyses" className="mt-6">
             <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Análisis de Rendimiento por Historia</CardTitle>
-                  <CardDescription>
-                    Resultados de pruebas de rendimiento por historia de usuario y entorno
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingAnalyses ? (
-                    <div className="text-center py-4">Cargando análisis...</div>
-                  ) : storyAnalyses.length === 0 ? (
+              {!selectedProjectId ? (
+                <Card>
+                  <CardContent className="pt-6">
                     <div className="text-center py-8 text-gray-500">
                       <BarChart3 className="mx-auto h-12 w-12 mb-4" />
-                      <p>No hay análisis de rendimiento disponibles</p>
+                      <p>Selecciona un proyecto para ver los análisis de rendimiento</p>
                     </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {storyAnalyses.map((analysis) => (
-                        <div key={analysis.id} className="border rounded-lg p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Badge variant={
-                                  analysis.testStatus === 'passed' ? 'default' :
-                                  analysis.testStatus === 'failed' ? 'destructive' :
-                                  analysis.testStatus === 'running' ? 'secondary' : 'outline'
-                                }>
-                                  {analysis.testStatus === 'passed' && <CheckCircle className="w-3 h-3 mr-1" />}
-                                  {analysis.testStatus === 'failed' && <AlertCircle className="w-3 h-3 mr-1" />}
-                                  {analysis.testStatus === 'running' && <Clock className="w-3 h-3 mr-1" />}
-                                  {analysis.testStatus}
-                                </Badge>
-                                {analysis.testDuration && (
-                                  <Badge variant="outline">{analysis.testDuration}s</Badge>
-                                )}
-                              </div>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
-                                {analysis.performanceBaseline && analysis.performanceActual && (
-                                  <div className="text-sm">
-                                    <p className="font-medium">Rendimiento</p>
-                                    <p className="text-gray-600">
-                                      Baseline: {analysis.performanceBaseline}
-                                    </p>
-                                    <p className="text-gray-600">
-                                      Actual: {analysis.performanceActual}
-                                    </p>
-                                    {analysis.performanceDelta && (
-                                      <p className={`font-medium ${
-                                        analysis.performanceDelta >= 0 ? 'text-green-600' : 'text-red-600'
-                                      }`}>
-                                        Delta: {analysis.performanceDelta >= 0 ? '+' : ''}{analysis.performanceDelta}
-                                      </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Análisis de Rendimiento por Historia</CardTitle>
+                    <CardDescription>
+                      Resultados de pruebas de rendimiento del proyecto: {selectedProject?.name}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {isLoadingAnalyses ? (
+                      <div className="text-center py-4">Cargando análisis...</div>
+                    ) : storyAnalyses.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <BarChart3 className="mx-auto h-12 w-12 mb-4" />
+                        <p>No hay análisis de rendimiento para este proyecto</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {storyAnalyses.map((analysis) => {
+                          // Find the user story and environment for this analysis
+                          const userStory = userStories.find(story => story.id === analysis.userStoryId);
+                          const application = selectedProject?.applications.find(app => app.id === userStory?.applicationId);
+                          const environment = application?.environments.find(env => env.id === analysis.environmentId);
+                          
+                          return (
+                            <div key={analysis.id} className="border rounded-lg p-4">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <h4 className="font-medium text-gray-900">
+                                      {userStory?.title || 'Historia no encontrada'}
+                                    </h4>
+                                    {application && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {application.name}
+                                      </Badge>
+                                    )}
+                                    {environment && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        {environment.displayName}
+                                      </Badge>
                                     )}
                                   </div>
-                                )}
-                                
-                                {analysis.functionalTestPassed !== undefined && (
-                                  <div className="text-sm">
-                                    <p className="font-medium">Prueba Funcional</p>
-                                    <p className={analysis.functionalTestPassed ? 'text-green-600' : 'text-red-600'}>
-                                      {analysis.functionalTestPassed ? '✓ Pasó' : '✗ Falló'}
-                                    </p>
+                                  
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <Badge variant={
+                                      analysis.testStatus === 'passed' ? 'default' :
+                                      analysis.testStatus === 'failed' ? 'destructive' :
+                                      analysis.testStatus === 'running' ? 'secondary' : 'outline'
+                                    }>
+                                      {analysis.testStatus === 'passed' && <CheckCircle className="w-3 h-3 mr-1" />}
+                                      {analysis.testStatus === 'failed' && <AlertCircle className="w-3 h-3 mr-1" />}
+                                      {analysis.testStatus === 'running' && <Clock className="w-3 h-3 mr-1" />}
+                                      {analysis.testStatus}
+                                    </Badge>
+                                    {analysis.testDuration && (
+                                      <Badge variant="outline">{analysis.testDuration}s</Badge>
+                                    )}
+                                    <span className="text-xs text-gray-500">
+                                      {new Date(analysis.testExecutedAt).toLocaleDateString('es-ES', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
                                   </div>
-                                )}
-                                
-                                {analysis.testerName && (
-                                  <div className="text-sm">
-                                    <p className="font-medium">Tester</p>
-                                    <p className="text-gray-600">{analysis.testerName}</p>
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {analysis.testNotes && (
-                                <div className="mt-3 text-sm">
-                                  <p className="font-medium">Notas</p>
-                                  <p className="text-gray-600">{analysis.testNotes}</p>
-                                </div>
-                              )}
-                              
-                              {analysis.criticalIssues && analysis.criticalIssues.length > 0 && (
-                                <div className="mt-3">
-                                  <p className="font-medium text-red-600 text-sm mb-1">Problemas Críticos</p>
-                                  <div className="space-y-1">
-                                    {analysis.criticalIssues.map((issue: any, index: number) => (
-                                      <div key={index} className="text-sm text-red-600 bg-red-50 p-2 rounded">
-                                        {issue.message}
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                                    {analysis.performanceBaseline && analysis.performanceActual && (
+                                      <div className="text-sm">
+                                        <p className="font-medium">Rendimiento</p>
+                                        <p className="text-gray-600">
+                                          Baseline: {analysis.performanceBaseline}
+                                        </p>
+                                        <p className="text-gray-600">
+                                          Actual: {analysis.performanceActual}
+                                        </p>
+                                        {analysis.performanceDelta && (
+                                          <p className={`font-medium ${
+                                            analysis.performanceDelta >= 0 ? 'text-green-600' : 'text-red-600'
+                                          }`}>
+                                            Delta: {analysis.performanceDelta >= 0 ? '+' : ''}{analysis.performanceDelta}
+                                          </p>
+                                        )}
                                       </div>
-                                    ))}
+                                    )}
+                                    
+                                    {analysis.functionalTestPassed !== undefined && (
+                                      <div className="text-sm">
+                                        <p className="font-medium">Prueba Funcional</p>
+                                        <p className={analysis.functionalTestPassed ? 'text-green-600' : 'text-red-600'}>
+                                          {analysis.functionalTestPassed ? '✓ Pasó' : '✗ Falló'}
+                                        </p>
+                                      </div>
+                                    )}
+                                    
+                                    {analysis.testerName && (
+                                      <div className="text-sm">
+                                        <p className="font-medium">Tester</p>
+                                        <p className="text-gray-600">{analysis.testerName}</p>
+                                      </div>
+                                    )}
                                   </div>
+                                  
+                                  {analysis.testNotes && (
+                                    <div className="mt-3 text-sm">
+                                      <p className="font-medium">Notas</p>
+                                      <p className="text-gray-600">{analysis.testNotes}</p>
+                                    </div>
+                                  )}
+                                  
+                                  {analysis.criticalIssues && analysis.criticalIssues.length > 0 && (
+                                    <div className="mt-3">
+                                      <p className="font-medium text-red-600 text-sm mb-1">Problemas Críticos</p>
+                                      <div className="space-y-1">
+                                        {analysis.criticalIssues.map((issue: any, index: number) => (
+                                          <div key={index} className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                                            {issue.message}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
         </Tabs>
