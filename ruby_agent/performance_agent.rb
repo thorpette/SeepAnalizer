@@ -386,59 +386,75 @@ end
 
 # Script ejecutable
 if __FILE__ == $0
-  if ARGV.empty?
-    puts "Uso: ruby performance_agent.rb <URL>"
+  if ARGV.empty? || ARGV.include?('--help') || ARGV.include?('-h')
+    puts "Uso: ruby performance_agent.rb <URL> [--json]"
     puts "Ejemplo: ruby performance_agent.rb https://example.com"
+    puts "         ruby performance_agent.rb https://example.com --json"
+    puts ""
+    puts "Opciones:"
+    puts "  --json    Salida en formato JSON únicamente"
+    puts "  --help    Mostrar esta ayuda"
     exit 1
   end
 
   url = ARGV[0]
+  json_only = ARGV.include?('--json')
   agent = PerformanceAgent.new(url)
   
   begin
     results = agent.analyze
     
-    puts "\n" + "="*60
-    puts "📊 REPORTE DE RENDIMIENTO COMPLETADO"
-    puts "="*60
-    
-    puts "\n🌐 Conectividad:"
-    puts "  Status: #{results[:connectivity][:status]}"
-    puts "  Tiempo de respuesta: #{results[:connectivity][:response_time]}ms"
-    puts "  Exitoso: #{results[:connectivity][:success] ? '✅' : '❌'}"
-    
-    if results[:headers]
-      puts "\n🔍 Headers:"
-      puts "  Servidor: #{results[:headers][:server]}"
-      puts "  HTTPS: #{results[:headers][:security][:https] ? '✅' : '❌'}"
-      puts "  Compresión: #{results[:headers][:compression][:compressed] ? '✅' : '❌'}"
-    end
-    
-    if results[:rails]
-      puts "\n💎 Ruby/Rails:"
-      puts "  Detectado: ✅"
-      puts "  Runtime: #{results[:rails][:runtime]}ms" if results[:rails][:runtime]
-      puts "  Versión: #{results[:rails][:version]}" if results[:rails][:version]
-    end
-    
-    puts "\n📊 Puntuación general: #{results[:analysis_summary][:overall_score]}/100"
-    
-    unless results[:analysis_summary][:recommendations].empty?
-      puts "\n💡 Recomendaciones:"
-      results[:analysis_summary][:recommendations].each_with_index do |rec, i|
-        puts "  #{i+1}. [#{rec[:priority].upcase}] #{rec[:title]}"
-        puts "     #{rec[:description]}"
+    if json_only
+      # Salida JSON únicamente para integración con Node.js
+      puts JSON.generate(results)
+    else
+      # Salida completa con formato legible
+      puts "\n" + "="*60
+      puts "📊 REPORTE DE RENDIMIENTO COMPLETADO"
+      puts "="*60
+      
+      puts "\n🌐 Conectividad:"
+      puts "  Status: #{results[:connectivity][:status]}"
+      puts "  Tiempo de respuesta: #{results[:connectivity][:response_time]}ms"
+      puts "  Exitoso: #{results[:connectivity][:success] ? '✅' : '❌'}"
+      
+      if results[:headers]
+        puts "\n🔍 Headers:"
+        puts "  Servidor: #{results[:headers][:server]}"
+        puts "  HTTPS: #{results[:headers][:security][:https] ? '✅' : '❌'}"
+        puts "  Compresión: #{results[:headers][:compression][:compressed] ? '✅' : '❌'}"
       end
+      
+      if results[:rails]
+        puts "\n💎 Ruby/Rails:"
+        puts "  Detectado: ✅"
+        puts "  Runtime: #{results[:rails][:runtime]}ms" if results[:rails][:runtime]
+        puts "  Versión: #{results[:rails][:version]}" if results[:rails][:version]
+      end
+      
+      puts "\n📊 Puntuación general: #{results[:analysis_summary][:overall_score]}/100"
+      
+      unless results[:analysis_summary][:recommendations].empty?
+        puts "\n💡 Recomendaciones:"
+        results[:analysis_summary][:recommendations].each_with_index do |rec, i|
+          puts "  #{i+1}. [#{rec[:priority].upcase}] #{rec[:title]}"
+          puts "     #{rec[:description]}"
+        end
+      end
+      
+      # Guardar resultados en JSON
+      output_file = "performance_report_#{Time.now.strftime('%Y%m%d_%H%M%S')}.json"
+      File.write(output_file, JSON.pretty_generate(results))
+      puts "\n💾 Reporte guardado en: #{output_file}"
     end
-    
-    # Guardar resultados en JSON
-    output_file = "performance_report_#{Time.now.strftime('%Y%m%d_%H%M%S')}.json"
-    File.write(output_file, JSON.pretty_generate(results))
-    puts "\n💾 Reporte guardado en: #{output_file}"
     
   rescue => e
-    puts "❌ Error durante el análisis: #{e.message}"
-    puts e.backtrace if ENV['DEBUG']
+    if json_only
+      puts JSON.generate({ error: e.message, status: 'failed' })
+    else
+      puts "❌ Error durante el análisis: #{e.message}"
+      puts e.backtrace if ENV['DEBUG']
+    end
     exit 1
   end
 end

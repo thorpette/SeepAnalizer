@@ -26,10 +26,11 @@ Preferred communication style: Simple, everyday language.
 - **Development**: Hot reload with Vite integration in development mode
 
 ### Data Storage
-- **Database**: PostgreSQL (configured via Drizzle)
-- **ORM**: Drizzle ORM with Zod schema validation
-- **Current Implementation**: In-memory storage (MemStorage class) for development
+- **Database**: PostgreSQL with Neon serverless (production ready)
+- **ORM**: Drizzle ORM with TypeScript schema definitions
+- **Implementation**: DatabaseStorage class with PostgreSQL persistence
 - **Session Storage**: PostgreSQL with connect-pg-simple
+- **Fallback**: MemStorage class for development/testing scenarios
 
 ## Key Components
 
@@ -57,17 +58,30 @@ Preferred communication style: Simple, everyday language.
 - **Storage Layer**: Abstracted storage interface with in-memory implementation
 - **API Routes**: RESTful endpoints for comprehensive analysis operations
 
-### Shared Schema
-- **Performance Analysis Schema**: Comprehensive data structure including:
-  - Core web vitals (FCP, LCP, TBT, CLS, Speed Index)
-  - Accessibility, Best Practices, and SEO scores (4-score layout)
+### Database Schema
+- **Analyses Table**: Core performance analysis data with comprehensive metrics
+  - Performance scores (Performance, Accessibility, Best Practices, SEO)
+  - Core Web Vitals metrics (FCP, LCP, TBT, CLS, Speed Index)
   - Resource details (page size, request count, load time)
-  - **Backend Analysis Schema**: Server technology, response times, security headers
-  - **Database Analysis**: Query performance, connection pools, slow query detection
-  - **Security Headers**: HTTPS, HSTS, CSP, X-Frame-Options analysis
-  - **Cache Headers**: Cache-Control, ETag, Last-Modified evaluation
-  - Multilingual improvement recommendations with impact levels
-  - Timeline data for visualization
+  - Backend analysis (server technology, response times, compression)
+  - Security headers analysis (HTTPS, HSTS, CSP, X-Frame-Options)
+  - Cache optimization headers (Cache-Control, ETag, Last-Modified)
+  - Ruby agent integration (raw Ruby output storage)
+  - Database performance metrics (query time, connection pools, slow queries)
+  - Recommendations and timeline data (JSON columns)
+  - Analysis lifecycle tracking (pending → processing → completed/failed)
+
+- **User Sessions Table**: Optional analytics tracking
+  - Session identification and user agent tracking
+  - IP address logging for analytics
+
+- **Analysis History Table**: Links analyses to user sessions
+  - Relationship tracking between sessions and analyses
+
+### Shared Schema
+- **Legacy Compatibility**: Maintains existing Zod schemas for frontend compatibility
+- **Type Safety**: Full TypeScript integration with Drizzle schema inference
+- **Data Conversion**: Automatic conversion between database and legacy formats
 
 ## Data Flow
 

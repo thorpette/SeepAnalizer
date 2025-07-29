@@ -1,0 +1,69 @@
+{
+  "connectivity": {
+    "status": 301,
+    "response_time": 106.46,
+    "success": true,
+    "redirect_count": 1
+  },
+  "headers": {
+    "server": "Unknown",
+    "content_type": null,
+    "content_length": 0,
+    "cache_control": null,
+    "etag": null,
+    "last_modified": null,
+    "security": {
+      "https": true,
+      "hsts": true,
+      "csp": null,
+      "x_frame_options": null,
+      "x_content_type_options": null
+    },
+    "compression": {
+      "content_encoding": null,
+      "transfer_encoding": null,
+      "compressed": null
+    }
+  },
+  "response_times": {
+    "average": 51.29,
+    "min": 44.72,
+    "max": 61.16,
+    "measurements": [
+      45.16,
+      61.16,
+      59.61,
+      44.72,
+      45.81
+    ]
+  },
+  "ssl": {
+    "valid": true,
+    "issuer": "/C=GB/ST=Greater Manchester/L=Salford/O=Sectigo Limited/CN=Sectigo ECC Domain Validation Secure Server CA",
+    "subject": "/CN=github.com",
+    "expires_at": "2026-02-05 23:59:59 UTC",
+    "days_until_expiry": 192,
+    "algorithm": "ecdsa-with-SHA256"
+  },
+  "resources": {
+    "total_size": 0,
+    "css_files": 0,
+    "js_files": 0,
+    "images": 0,
+    "estimated_requests": 1
+  },
+  "analysis_summary": {
+    "url": "https://www.github.com",
+    "analyzed_at": "2025-07-29T10:48:10+00:00",
+    "analysis_duration": 1.04,
+    "overall_score": 95,
+    "recommendations": [
+      {
+        "priority": "medium",
+        "category": "performance",
+        "title": "Habilitar compresión",
+        "description": "Activa la compresión gzip/brotli para reducir el tamaño de transferencia."
+      }
+    ]
+  }
+}
