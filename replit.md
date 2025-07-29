@@ -127,11 +127,22 @@ Preferred communication style: Simple, everyday language.
 - **Database**: Drizzle migrations applied via `db:push` command
 - **Serving**: Express serves static frontend files
 
+### Docker Deployment (Local)
+- **Container Strategy**: Multi-stage Docker build with Node.js 20 Alpine
+- **Database**: PostgreSQL 15 container with persistent volumes
+- **Ruby Agent**: Integrated Ruby runtime for authentic backend analysis
+- **Services**: Docker Compose orchestration with health checks
+- **Security**: Non-root user execution in production container
+- **Networking**: Internal container network with exposed ports
+- **Quick Start**: `./deploy-docker.sh` script for automated deployment
+- **Documentation**: Complete setup guide in `README-DOCKER.md`
+
 ### Environment Configuration
 - **Database**: PostgreSQL connection via DATABASE_URL
 - **Session**: PostgreSQL-backed sessions for scalability
 - **Build**: Separate client/server TypeScript configurations
 - **Paths**: Configured aliases for clean imports (@/, @shared/)
+- **Docker**: Environment variables configured via docker-compose.yml
 
 ## Ruby Performance Agent
 
