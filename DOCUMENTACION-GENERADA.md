@@ -2,7 +2,26 @@
 
 ## Resumen de Archivos Creados
 
-### 📄 Documento Principal de Diseño Funcional
+### 📄 Documentación Técnica y de Usuario
+
+#### **Manual-Usuario-PageSpeed-Analyzer.html**
+- **Descripción**: Manual completo de usuario en formato HTML profesional
+- **Contenido**: 10 secciones detalladas cubriendo uso, interpretación, troubleshooting
+- **Acceso Web**: http://localhost:5000/user-manual
+- **Tamaño**: ~39 KB
+- **Audiencia**: Usuarios finales, desarrolladores, gerentes de proyecto, equipos QA
+- **Características**:
+  - Guías paso a paso para usar el sistema
+  - Interpretación detallada de métricas
+  - Solución de problemas comunes
+  - FAQ con 15+ preguntas frecuentes
+  - Glosario con 30+ términos técnicos
+  - Diseño responsive para dispositivos móviles
+
+#### **Manual-Usuario-PageSpeed-Analyzer-Print.html**
+- **Descripción**: Versión optimizada para conversión a PDF
+- **Uso**: Conversión directa a PDF desde navegador
+- **Páginas estimadas**: 35-40 páginas A4
 
 #### **PageSpeed-Analyzer-Diseno-Funcional.html**
 - **Descripción**: Documento completo de diseño funcional en formato HTML profesional
@@ -23,6 +42,16 @@
 
 ### 📋 Scripts y Herramientas
 
+#### **scripts/generate-user-manual.js**
+- **Descripción**: Script ESM para generar manual de usuario HTML desde Markdown
+- **Funcionalidad**:
+  - Convierte Markdown a HTML usando marked
+  - Aplica estilos CSS profesionales específicos para manual de usuario
+  - Genera metadatos del documento
+  - Crea versión para impresión optimizada
+  - Incluye funcionalidades interactivas (barra de progreso, navegación suave)
+- **Uso**: `node scripts/generate-user-manual.js`
+
 #### **scripts/generate-html-document.js**
 - **Descripción**: Script Node.js para generar documentación HTML desde Markdown
 - **Funcionalidad**:
@@ -31,6 +60,15 @@
   - Genera metadatos del documento
   - Crea versión para impresión
 - **Uso**: `node scripts/generate-html-document.js`
+
+#### **MANUAL-PDF-INSTRUCCIONES.md**
+- **Descripción**: Guía completa para convertir manual de usuario HTML a PDF
+- **Métodos Incluidos**:
+  1. Navegador (Ctrl+P → Guardar como PDF) - Recomendado
+  2. Herramientas online
+  3. wkhtmltopdf (Linux/Mac)
+  4. Puppeteer (para desarrolladores)
+- **Configuraciones específicas**: Márgenes, tamaños, opciones de calidad
 
 #### **INSTRUCCIONES-PDF.md**
 - **Descripción**: Guía completa para convertir HTML a PDF

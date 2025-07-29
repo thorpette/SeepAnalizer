@@ -180,3 +180,13 @@ The application is designed as a monorepo with clear separation between client, 
 - **Coverage**: Executive summary, technical specs, user interface, security, scalability
 - **Language**: Fully documented in Spanish for localized development teams
 - **Format**: Professional layout optimized for printing and digital viewing
+
+### User Manual
+- **Complete User Manual**: Generated in HTML format for end users and developers
+- **Content**: 10 comprehensive sections covering usage, interpretation, troubleshooting
+- **Access**: Available at `/user-manual` endpoint and direct HTML files
+- **Target Audience**: End users, developers, project managers, QA teams
+- **Coverage**: Step-by-step guides, metrics interpretation, best practices, FAQ, glossary
+- **PDF Ready**: Optimized for browser-to-PDF conversion with professional styling
+- **Interactive Features**: Progress bar, smooth navigation, responsive design
+- **Size**: 35-40 A4 pages with detailed explanations and examples

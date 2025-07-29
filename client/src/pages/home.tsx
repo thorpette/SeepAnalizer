@@ -46,6 +46,13 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-4">
               <a 
+                href="/user-manual" 
+                target="_blank"
+                className="text-sm text-green-600 hover:text-green-800 underline"
+              >
+                📚 Manual de Usuario
+              </a>
+              <a 
                 href="/design-document" 
                 target="_blank"
                 className="text-sm text-blue-600 hover:text-blue-800 underline"

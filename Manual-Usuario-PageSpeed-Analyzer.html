@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual de Usuario - PageSpeed Analyzer</title>
+    <meta name="description" content="Manual completo de usuario para PageSpeed Analyzer con Agente Ruby Integrado">
+    <meta name="author" content="Equipo PageSpeed Analyzer">
+    <meta name="keywords" content="PageSpeed, Performance, Web, Ruby, Manual, Usuario">
+    <style>
+        
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+  
+  :root {
+    --primary-color: #1f2937;
+    --secondary-color: #3b82f6;
+    --accent-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --success-color: #22c55e;
+    --background-color: #ffffff;
+    --surface-color: #f8fafc;
+    --border-color: #e2e8f0;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--background-color);
+    font-size: 14px;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+  
+  /* Header */
+  .manual-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 3rem 0;
+    text-align: center;
+    margin-bottom: 0;
+  }
+  
+  .manual-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .manual-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 1rem;
+  }
+  
+  .manual-meta {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    flex-wrap: wrap;
+  }
+  
+  /* Table of Contents */
+  .toc {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+  
+  .toc h2 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 0.5rem;
+  }
+  
+  .toc ol {
+    list-style: none;
+    counter-reset: section;
+  }
+  
+  .toc li {
+    counter-increment: section;
+    margin: 0.5rem 0;
+  }
+  
+  .toc li::before {
+    content: counter(section) ". ";
+    color: var(--secondary-color);
+    font-weight: 600;
+  }
+  
+  .toc a {
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  
+  .toc a:hover {
+    color: var(--secondary-color);
+  }
+  
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.3;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    border-bottom: 3px solid var(--secondary-color);
+    padding-bottom: 0.5rem;
+    margin-top: 3rem;
+  }
+  
+  h2 {
+    font-size: 1.8rem;
+    color: var(--secondary-color);
+    border-left: 4px solid var(--secondary-color);
+    padding-left: 1rem;
+    margin-top: 2.5rem;
+  }
+  
+  h3 {
+    font-size: 1.4rem;
+    color: var(--primary-color);
+    margin-top: 2rem;
+  }
+  
+  h4 {
+    font-size: 1.2rem;
+    color: var(--accent-color);
+    margin-top: 1.5rem;
+  }
+  
+  h5 {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-top: 1rem;
+  }
+  
+  p {
+    margin-bottom: 1rem;
+    line-height: 1.7;
+  }
+  
+  /* Lists */
+  ul, ol {
+    margin-left: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  li {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+  }
+  
+  /* Emphasis and inline elements */
+  strong, **bold** {
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+  
+  em {
+    font-style: italic;
+    color: var(--text-secondary);
+  }
+  
+  /* Code */
+  code {
+    font-family: 'Fira Code', monospace;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.9em;
+    color: var(--primary-color);
+  }
+  
+  pre {
+    background: var(--primary-color);
+    color: #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+    line-height: 1.5;
+  }
+  
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-size: 0.9rem;
+  }
+  
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  th {
+    background: var(--surface-color);
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+  
+  tr:hover {
+    background: var(--surface-color);
+  }
+  
+  /* Alert boxes */
+  .alert {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    border-left: 4px solid;
+  }
+  
+  .alert-info {
+    background: #eff6ff;
+    border-color: var(--secondary-color);
+    color: #1e40af;
+  }
+  
+  .alert-success {
+    background: #f0fdf4;
+    border-color: var(--success-color);
+    color: #166534;
+  }
+  
+  .alert-warning {
+    background: #fffbeb;
+    border-color: var(--warning-color);
+    color: #92400e;
+  }
+  
+  .alert-danger {
+    background: #fef2f2;
+    border-color: var(--danger-color);
+    color: #991b1b;
+  }
+  
+  /* Status indicators */
+  .status {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .status-excellent {
+    background: #dcfce7;
+    color: #166534;
+  }
+  
+  .status-good {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+  
+  .status-needs-improvement {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  
+  .status-poor {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+  
+  /* Metrics visualization */
+  .metric-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  
+  .metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .metric-name {
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+  
+  .metric-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+  
+  /* Progress indicators */
+  .progress-bar {
+    background: var(--border-color);
+    border-radius: 4px;
+    height: 8px;
+    margin: 0.5rem 0;
+    overflow: hidden;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+  
+  .progress-excellent {
+    background: var(--success-color);
+  }
+  
+  .progress-good {
+    background: var(--secondary-color);
+  }
+  
+  .progress-warning {
+    background: var(--warning-color);
+  }
+  
+  .progress-poor {
+    background: var(--danger-color);
+  }
+  
+  /* Blockquotes */
+  blockquote {
+    border-left: 4px solid var(--secondary-color);
+    background: var(--surface-color);
+    padding: 1rem 1.5rem;
+    margin: 1.5rem 0;
+    font-style: italic;
+    color: var(--text-secondary);
+  }
+  
+  /* Links */
+  a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  
+  a:hover {
+    border-bottom-color: var(--secondary-color);
+  }
+  
+  /* Section dividers */
+  hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(to right, var(--secondary-color), transparent);
+    margin: 3rem 0;
+  }
+  
+  /* Footer */
+  .manual-footer {
+    background: var(--surface-color);
+    border-top: 1px solid var(--border-color);
+    padding: 2rem 0;
+    margin-top: 4rem;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  
+  /* Print styles */
+  @media print {
+    body {
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    
+    .manual-header {
+      background: none !important;
+      color: var(--text-primary) !important;
+      padding: 1rem 0;
+    }
+    
+    h1, h2, h3, h4 {
+      page-break-after: avoid;
+    }
+    
+    .toc {
+      page-break-after: always;
+    }
+    
+    pre, .metric-card {
+      page-break-inside: avoid;
+    }
+    
+    a {
+      color: var(--text-primary) !important;
+      text-decoration: none !important;
+      border-bottom: none !important;
+    }
+    
+    .alert {
+      border: 1px solid var(--border-color) !important;
+      page-break-inside: avoid;
+    }
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 1rem;
+    }
+    
+    .manual-header h1 {
+      font-size: 2rem;
+    }
+    
+    .manual-meta {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    h1 {
+      font-size: 2rem;
+    }
+    
+    h2 {
+      font-size: 1.5rem;
+    }
+    
+    pre {
+      padding: 1rem;
+      font-size: 0.8rem;
+    }
+  }
+
+    </style>
+</head>
+<body>
+    <header class="manual-header">
+        <div class="container">
+            <h1>Manual de Usuario</h1>
+            <div class="manual-subtitle">PageSpeed Analyzer con Agente Ruby Integrado</div>
+            <div class="manual-meta">
+                <span>📅 Versión 1.0</span>
+                <span>📆 29 de Julio, 2025</span>
+                <span>👥 Para usuarios finales y desarrolladores</span>
+                <span>📊 Principiante a Intermedio</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1>Manual de Usuario</h1>
+<h2>PageSpeed Analyzer con Agente Ruby Integrado</h2>
+<hr>
+<p><strong>Versión:</strong> 1.0<br><strong>Fecha:</strong> 29 de Julio, 2025<br><strong>Dirigido a:</strong> Usuarios finales, desarrolladores web, administradores de sistemas<br><strong>Nivel:</strong> Principiante a Intermedio  </p>
+<hr>
+<h2>Tabla de Contenidos</h2>
+<ol>
+<li><a href="#introducci%C3%B3n">Introducción</a></li>
+<li><a href="#acceso-al-sistema">Acceso al Sistema</a></li>
+<li><a href="#interfaz-principal">Interfaz Principal</a></li>
+<li><a href="#realizar-un-an%C3%A1lisis">Realizar un Análisis</a></li>
+<li><a href="#interpretar-resultados">Interpretar Resultados</a></li>
+<li><a href="#reporte-integrado">Reporte Integrado</a></li>
+<li><a href="#consejos-y-mejores-pr%C3%A1cticas">Consejos y Mejores Prácticas</a></li>
+<li><a href="#soluci%C3%B3n-de-problemas">Solución de Problemas</a></li>
+<li><a href="#preguntas-frecuentes">Preguntas Frecuentes</a></li>
+<li><a href="#glosario-de-t%C3%A9rminos">Glosario de Términos</a></li>
+</ol>
+<hr>
+<h2>1. Introducción</h2>
+<h3>¿Qué es PageSpeed Analyzer?</h3>
+<p>PageSpeed Analyzer es una herramienta web avanzada que analiza el rendimiento de sitios web de manera integral. A diferencia de otras herramientas, combina análisis frontend (experiencia del usuario) con análisis backend profundo (rendimiento del servidor), especialmente optimizado para aplicaciones Ruby on Rails.</p>
+<h3>Características Principales</h3>
+<ul>
+<li><strong>Análisis Completo</strong>: Evalúa tanto frontend como backend en una sola herramienta</li>
+<li><strong>Agente Ruby Especializado</strong>: Análisis específico para aplicaciones Ruby/Rails</li>
+<li><strong>Reporte Integrado</strong>: Correlaciona problemas frontend con causas backend</li>
+<li><strong>Interfaz en Español</strong>: Completamente localizada para usuarios hispanohablantes</li>
+<li><strong>Recomendaciones Accionables</strong>: Sugerencias específicas para mejorar el rendimiento</li>
+<li><strong>Análisis Auténtico</strong>: Utiliza datos reales, no simulados</li>
+</ul>
+<h3>¿Para Quién es Esta Herramienta?</h3>
+<ul>
+<li><strong>Desarrolladores Web</strong>: Para optimizar sus aplicaciones</li>
+<li><strong>Administradores de Sistemas</strong>: Para identificar cuellos de botella del servidor</li>
+<li><strong>Equipos de QA</strong>: Para validar rendimiento antes de producción</li>
+<li><strong>Gerentes de Proyecto</strong>: Para obtener reportes ejecutivos de rendimiento</li>
+<li><strong>Especialistas SEO</strong>: Para mejorar métricas Core Web Vitals</li>
+</ul>
+<hr>
+<h2>2. Acceso al Sistema</h2>
+<h3>Requisitos del Sistema</h3>
+<h4>Para Usuarios</h4>
+<ul>
+<li><strong>Navegador Web Moderno</strong>: Chrome, Firefox, Safari, Edge (versiones recientes)</li>
+<li><strong>Conexión a Internet</strong>: Para analizar sitios web remotos</li>
+<li><strong>Resolución Mínima</strong>: 1024x768 píxeles (recomendado: 1920x1080)</li>
+</ul>
+<h4>Para Administradores</h4>
+<ul>
+<li><strong>Docker</strong>: Para despliegue local</li>
+<li><strong>Node.js 20+</strong>: Para desarrollo</li>
+<li><strong>PostgreSQL</strong>: Para base de datos (incluido en Docker)</li>
+</ul>
+<h3>Métodos de Acceso</h3>
+<h4>Acceso Web (Recomendado)</h4>
+<pre><code>URL: http://localhost:5000
+</code></pre>
+<h4>Despliegue Local con Docker</h4>
+<pre><code class="language-bash"># Clonar el repositorio
+git clone [repository-url]
+cd pagespeed-analyzer
+
+# Ejecutar script de despliegue
+./deploy-docker.sh
+
+# Acceder en navegador
+open http://localhost:5000
+</code></pre>
+<h4>Acceso Directo al Código</h4>
+<pre><code class="language-bash"># Instalar dependencias
+npm install
+
+# Iniciar en modo desarrollo
+npm run dev
+</code></pre>
+<hr>
+<h2>3. Interfaz Principal</h2>
+<h3>Descripción General</h3>
+<p>La interfaz de PageSpeed Analyzer está diseñada para ser intuitiva y eficiente. Consta de los siguientes elementos principales:</p>
+<h4>Header (Cabecera)</h4>
+<ul>
+<li><strong>Logo y Título</strong>: &quot;PageSpeed Analyzer con Agente Ruby Integrado&quot;</li>
+<li><strong>Enlace de Documentación</strong>: Acceso directo al documento técnico</li>
+<li><strong>Indicador de Estado</strong>: Muestra disponibilidad del agente Ruby</li>
+</ul>
+<h4>Área Principal</h4>
+<ul>
+<li><strong>Formulario de Análisis</strong>: Entrada de URL y configuración</li>
+<li><strong>Área de Resultados</strong>: Visualización de métricas y reportes</li>
+<li><strong>Estados de Progreso</strong>: Indicadores durante el análisis</li>
+</ul>
+<h3>Navegación</h3>
+<p>La aplicación utiliza una interfaz de página única (SPA) con navegación por pestañas:</p>
+<ul>
+<li><strong>Análisis Detallado</strong>: Vista tradicional con métricas categorizadas</li>
+<li><strong>Reporte Integrado</strong>: Vista avanzada con correlación frontend-backend</li>
+</ul>
+<h3>Elementos de la Interfaz</h3>
+<h4>Formulario de Entrada</h4>
+<ul>
+<li><strong>Campo URL</strong>: Donde ingresas la dirección del sitio a analizar</li>
+<li><strong>Selector de Dispositivo</strong>: Elige entre &quot;Desktop&quot; o &quot;Mobile&quot;</li>
+<li><strong>Botón Analizar</strong>: Inicia el proceso de análisis</li>
+</ul>
+<h4>Indicadores Visuales</h4>
+<ul>
+<li><strong>Gráficos Circulares</strong>: Muestran puntuaciones de 0-100</li>
+<li><strong>Barras de Progreso</strong>: Indican avance durante análisis</li>
+<li><strong>Códigos de Color</strong>: Verde (bueno), Amarillo (mejorable), Rojo (problemático)</li>
+</ul>
+<hr>
+<h2>4. Realizar un Análisis</h2>
+<h3>Paso a Paso: Tu Primer Análisis</h3>
+<h4>Paso 1: Preparación</h4>
+<ol>
+<li><strong>Abre la aplicación</strong> en tu navegador</li>
+<li><strong>Verifica conectividad</strong> a internet</li>
+<li><strong>Ten lista la URL</strong> del sitio web que quieres analizar</li>
+</ol>
+<h4>Paso 2: Configuración del Análisis</h4>
+<ol>
+<li><p><strong>Ingresa la URL completa</strong></p>
+<ul>
+<li>Ejemplo: <code>https://www.ejemplo.com</code></li>
+<li>Incluye siempre <code>http://</code> o <code>https://</code></li>
+<li>Verifica que no haya espacios en blanco</li>
+</ul>
+</li>
+<li><p><strong>Selecciona el tipo de dispositivo</strong></p>
+<ul>
+<li><strong>Desktop</strong>: Para análisis de computadoras de escritorio</li>
+<li><strong>Mobile</strong>: Para análisis de dispositivos móviles</li>
+</ul>
+</li>
+<li><p><strong>Haz clic en &quot;Analizar Rendimiento&quot;</strong></p>
+</li>
+</ol>
+<h4>Paso 3: Monitoreo del Progreso</h4>
+<p>Durante el análisis verás:</p>
+<ul>
+<li><strong>Barra de progreso</strong> con porcentaje completado</li>
+<li><strong>Indicadores de etapa</strong> actual del análisis</li>
+<li><strong>Tiempo estimado</strong> restante</li>
+<li><strong>Opción de cancelar</strong> si es necesario</li>
+</ul>
+<h3>Tipos de Análisis Disponibles</h3>
+<h4>Análisis Frontend</h4>
+<ul>
+<li><strong>Core Web Vitals</strong>: LCP, FCP, TBT, CLS</li>
+<li><strong>Rendimiento General</strong>: Puntuación 0-100</li>
+<li><strong>Accesibilidad</strong>: Evaluación de usabilidad</li>
+<li><strong>Mejores Prácticas</strong>: Adherencia a estándares web</li>
+<li><strong>SEO</strong>: Optimización para motores de búsqueda</li>
+</ul>
+<h4>Análisis Backend</h4>
+<ul>
+<li><strong>Tiempo de Respuesta</strong>: Latencia del servidor</li>
+<li><strong>Tecnología del Servidor</strong>: Detección automática</li>
+<li><strong>Headers de Seguridad</strong>: HTTPS, HSTS, CSP, etc.</li>
+<li><strong>Configuración de Caché</strong>: Estrategias de almacenamiento</li>
+<li><strong>Compresión</strong>: Optimización de transferencia</li>
+</ul>
+<h4>Análisis Ruby/Rails (Cuando Aplique)</h4>
+<ul>
+<li><strong>Detección Automática</strong>: Identifica aplicaciones Rails</li>
+<li><strong>Métricas de Base de Datos</strong>: Tiempo de consultas, pool de conexiones</li>
+<li><strong>Runtime Information</strong>: X-Runtime headers, versión Rails</li>
+<li><strong>Servidores Ruby</strong>: Puma, Unicorn, Passenger</li>
+</ul>
+<h3>Duración del Análisis</h3>
+<ul>
+<li><strong>Análisis Típico</strong>: 30-60 segundos</li>
+<li><strong>Sitios Lentos</strong>: Hasta 2 minutos</li>
+<li><strong>Timeout</strong>: Máximo 3 minutos</li>
+</ul>
+<hr>
+<h2>5. Interpretar Resultados</h2>
+<h3>Vista de Análisis Detallado</h3>
+<h4>Puntuaciones Principales</h4>
+<p>Cada categoría se califica de 0 a 100:</p>
+<p><strong><span style="color: #22c55e;">●</span> Verde (90-100): Excelente</strong></p>
+<ul>
+<li>El sitio cumple con las mejores prácticas</li>
+<li>Rendimiento óptimo para usuarios</li>
+<li>No requiere acción inmediata</li>
+</ul>
+<p><strong><span style="color: #f59e0b;">●</span> Amarillo (50-89): Necesita Mejora</strong></p>
+<ul>
+<li>Rendimiento aceptable pero optimizable</li>
+<li>Puede afectar experiencia de usuario</li>
+<li>Recomendable implementar mejoras</li>
+</ul>
+<p><strong><span style="color: #ef4444;">●</span> Rojo (0-49): Problemático</strong></p>
+<ul>
+<li>Rendimiento deficiente</li>
+<li>Afecta significativamente la experiencia</li>
+<li>Requiere atención inmediata</li>
+</ul>
+<h4>Core Web Vitals Explicados</h4>
+<p><strong>First Contentful Paint (FCP)</strong></p>
+<ul>
+<li><strong>Qué mide</strong>: Tiempo hasta que aparece el primer contenido</li>
+<li><strong>Bueno</strong>: &lt; 1.8 segundos</li>
+<li><strong>Mejorable</strong>: 1.8 - 3.0 segundos</li>
+<li><strong>Problemático</strong>: &gt; 3.0 segundos</li>
+</ul>
+<p><strong>Largest Contentful Paint (LCP)</strong></p>
+<ul>
+<li><strong>Qué mide</strong>: Tiempo hasta cargar el elemento principal</li>
+<li><strong>Bueno</strong>: &lt; 2.5 segundos</li>
+<li><strong>Mejorable</strong>: 2.5 - 4.0 segundos</li>
+<li><strong>Problemático</strong>: &gt; 4.0 segundos</li>
+</ul>
+<p><strong>Total Blocking Time (TBT)</strong></p>
+<ul>
+<li><strong>Qué mide</strong>: Tiempo que la página está bloqueada</li>
+<li><strong>Bueno</strong>: &lt; 200 milisegundos</li>
+<li><strong>Mejorable</strong>: 200 - 600 milisegundos</li>
+<li><strong>Problemático</strong>: &gt; 600 milisegundos</li>
+</ul>
+<p><strong>Cumulative Layout Shift (CLS)</strong></p>
+<ul>
+<li><strong>Qué mide</strong>: Estabilidad visual durante la carga</li>
+<li><strong>Bueno</strong>: &lt; 0.1</li>
+<li><strong>Mejorable</strong>: 0.1 - 0.25</li>
+<li><strong>Problemático</strong>: &gt; 0.25</li>
+</ul>
+<h4>Información de Recursos</h4>
+<ul>
+<li><strong>Tamaño de Página</strong>: Total de datos transferidos</li>
+<li><strong>Número de Peticiones</strong>: Cantidad de recursos solicitados</li>
+<li><strong>Tiempo de Carga</strong>: Duración total del proceso</li>
+</ul>
+<h3>Análisis Backend</h3>
+<h4>Tiempo de Respuesta del Servidor</h4>
+<ul>
+<li><strong>Excelente</strong>: &lt; 200ms</li>
+<li><strong>Bueno</strong>: 200-500ms</li>
+<li><strong>Lento</strong>: 500-1000ms</li>
+<li><strong>Problemático</strong>: &gt; 1000ms</li>
+</ul>
+<h4>Headers de Seguridad</h4>
+<ul>
+<li><strong>HTTPS</strong>: Cifrado de conexión</li>
+<li><strong>HSTS</strong>: Seguridad de transporte estricta</li>
+<li><strong>CSP</strong>: Política de seguridad de contenido</li>
+<li><strong>X-Frame-Options</strong>: Protección contra clickjacking</li>
+</ul>
+<h4>Configuración de Caché</h4>
+<ul>
+<li><strong>Cache-Control</strong>: Directivas de almacenamiento</li>
+<li><strong>ETag</strong>: Validación de contenido</li>
+<li><strong>Last-Modified</strong>: Fecha de última modificación</li>
+</ul>
+<hr>
+<h2>6. Reporte Integrado</h2>
+<h3>¿Qué es el Reporte Integrado?</h3>
+<p>El Reporte Integrado es una vista avanzada que combina métricas frontend y backend para proporcionar un análisis holístico del rendimiento. Es especialmente útil para:</p>
+<ul>
+<li><strong>Identificar la causa raíz</strong> de problemas de rendimiento</li>
+<li><strong>Correlacionar</strong> rendimiento frontend con backend</li>
+<li><strong>Priorizar optimizaciones</strong> basadas en impacto real</li>
+<li><strong>Generar reportes ejecutivos</strong> para stakeholders</li>
+</ul>
+<h3>Secciones del Reporte Integrado</h3>
+<h4>Resumen Ejecutivo</h4>
+<ul>
+<li><strong>Puntuación General</strong>: Promedio ponderado de todas las métricas</li>
+<li><strong>Estado de Salud</strong>: Clasificación general (Excelente/Bueno/Necesita Mejora/Deficiente)</li>
+<li><strong>Métricas Clave</strong>: Tiempo de respuesta del servidor vs. tiempo de primer contenido</li>
+</ul>
+<h4>Problemas Críticos</h4>
+<p>Identificación automática de issues que requieren atención inmediata:</p>
+<ul>
+<li><strong>Falta de HTTPS</strong>: Impacto en seguridad y SEO</li>
+<li><strong>LCP muy lento</strong>: Afecta experiencia de usuario</li>
+<li><strong>Servidor lento</strong>: Causa problemas en toda la aplicación</li>
+</ul>
+<h4>Análisis Frontend</h4>
+<ul>
+<li><strong>Core Web Vitals con contexto</strong>: Explicación de cada métrica</li>
+<li><strong>Eficiencia de Recursos</strong>: Evaluación de tamaño y número de peticiones</li>
+<li><strong>Recomendaciones específicas</strong>: Basadas en hallazgos reales</li>
+</ul>
+<h4>Infraestructura Backend</h4>
+<ul>
+<li><strong>Rendimiento del Servidor</strong>: Análisis detallado de respuesta</li>
+<li><strong>Seguridad</strong>: Evaluación comprehensiva de headers</li>
+<li><strong>Estrategia de Caché</strong>: Análisis de configuración actual</li>
+</ul>
+<h4>Análisis de Correlación</h4>
+<p>Esta es la sección más valiosa del reporte:</p>
+<ul>
+<li><strong>Impacto del Servidor</strong>: Porcentaje de influencia backend en rendimiento frontend</li>
+<li><strong>Análisis de Causas</strong>: Determina si los problemas son de servidor o cliente</li>
+<li><strong>Desglose de Tiempos</strong>: Visualiza dónde se gasta el tiempo de carga</li>
+</ul>
+<h3>Cómo Usar el Reporte Integrado</h3>
+<h4>Para Desarrolladores</h4>
+<ol>
+<li><strong>Revisa problemas críticos</strong> primero</li>
+<li><strong>Analiza la correlación</strong> frontend-backend</li>
+<li><strong>Prioriza optimizaciones</strong> por impacto</li>
+<li><strong>Implementa recomendaciones</strong> por orden de importancia</li>
+</ol>
+<h4>Para Gerentes de Proyecto</h4>
+<ol>
+<li><strong>Utiliza el resumen ejecutivo</strong> para comunicar estado</li>
+<li><strong>Identifica riesgos</strong> basados en problemas críticos</li>
+<li><strong>Planifica recursos</strong> según recomendaciones</li>
+<li><strong>Comunica valor de negocio</strong> de las optimizaciones</li>
+</ol>
+<hr>
+<h2>7. Consejos y Mejores Prácticas</h2>
+<h3>Antes del Análisis</h3>
+<h4>Preparación del Sitio</h4>
+<ul>
+<li><strong>Asegúrate de que el sitio esté accesible</strong> públicamente</li>
+<li><strong>Verifica que no haya mantenimiento</strong> programado</li>
+<li><strong>Considera el horario</strong> (evita horas pico si hay limitaciones de servidor)</li>
+</ul>
+<h4>Configuración Óptima</h4>
+<ul>
+<li><strong>Usa la URL principal</strong> del sitio (página de inicio o landing page más importante)</li>
+<li><strong>Analiza ambos dispositivos</strong> (desktop y mobile) para comparar</li>
+<li><strong>Repite análisis</strong> en diferentes momentos para obtener promedios</li>
+</ul>
+<h3>Durante el Análisis</h3>
+<h4>Qué Hacer</h4>
+<ul>
+<li><strong>Mantén la ventana abierta</strong> durante el análisis</li>
+<li><strong>No realices otros análisis</strong> simultáneamente</li>
+<li><strong>Espera a que complete</strong> antes de cerrar el navegador</li>
+</ul>
+<h4>Qué No Hacer</h4>
+<ul>
+<li><strong>No recargar la página</strong> durante el análisis</li>
+<li><strong>No cerrar el navegador</strong> prematuramente</li>
+<li><strong>No hacer múltiples análisis</strong> del mismo sitio en paralelo</li>
+</ul>
+<h3>Después del Análisis</h3>
+<h4>Interpretación de Resultados</h4>
+<ul>
+<li><strong>Compara con benchmarks</strong> de tu industria</li>
+<li><strong>Prioriza problemas críticos</strong> sobre optimizaciones menores</li>
+<li><strong>Considera el contexto</strong> de tu aplicación (e-commerce vs. blog vs. SaaS)</li>
+</ul>
+<h4>Planificación de Mejoras</h4>
+<ol>
+<li><strong>Problemas de Seguridad</strong>: Prioridad máxima</li>
+<li><strong>Optimizaciones de Servidor</strong>: Alto impacto, implementación relativamente sencilla</li>
+<li><strong>Optimizaciones Frontend</strong>: Requieren más trabajo pero mejoran experiencia directamente</li>
+</ol>
+<h3>Mejores Prácticas por Categoría</h3>
+<h4>Para Mejorar Rendimiento</h4>
+<ul>
+<li><strong>Optimiza imágenes</strong>: Usa formatos modernos (WebP, AVIF)</li>
+<li><strong>Implementa CDN</strong>: Reduce latencia geográfica</li>
+<li><strong>Minimiza JavaScript</strong>: Elimina código no utilizado</li>
+<li><strong>Usa caché efectivamente</strong>: Configura headers apropiados</li>
+</ul>
+<h4>Para Mejorar Accesibilidad</h4>
+<ul>
+<li><strong>Añade texto alternativo</strong> a imágenes</li>
+<li><strong>Mejora contraste</strong> de colores</li>
+<li><strong>Implementa navegación por teclado</strong></li>
+<li><strong>Usa semantic HTML</strong></li>
+</ul>
+<h4>Para Mejorar SEO</h4>
+<ul>
+<li><strong>Optimiza Core Web Vitals</strong>: Google los usa como factor de ranking</li>
+<li><strong>Mejora tiempo de carga</strong>: Impacta directamente en posicionamiento</li>
+<li><strong>Implementa datos estructurados</strong></li>
+<li><strong>Asegura compatibilidad móvil</strong></li>
+</ul>
+<hr>
+<h2>8. Solución de Problemas</h2>
+<h3>Problemas Comunes y Soluciones</h3>
+<h4>El análisis no inicia</h4>
+<div class="alert alert-info"><strong>Síntomas</strong>: El botón "Analizar" no responde o aparece error inmediato
+
+</div><div class="alert alert-warning"><strong>Posibles causas y soluciones</strong>:
+- **URL inválida**: Verifica formato (incluye http:// o https://)
+- **Sitio inaccesible**: Confirma que el sitio esté online
+- **Problemas de conectividad**: Verifica tu conexión a internet
+- **Bloqueo por firewall**: Contacta al administrador de red
+
+<h4>El análisis se queda &quot;cargando&quot;</h4>
+<div class="alert alert-info"><strong>Síntomas</strong>: La barra de progreso no avanza o se detiene
+
+</div><div class="alert alert-warning"><strong>Posibles causas y soluciones</strong>:
+- **Sitio muy lento**: Espera hasta 3 minutos máximo
+- **Servidor sobrecargado**: Intenta en otro momento
+- **Timeout del sistema**: Recarga la página e intenta de nuevo
+
+<h4>Resultados inconsistentes</h4>
+<div class="alert alert-info"><strong>Síntomas</strong>: Análisis repetidos muestran resultados muy diferentes
+
+</div><div class="alert alert-warning"><strong>Posibles causas y soluciones</strong>:
+- **Variabilidad normal**: Diferencias de ±10 puntos son normales
+- **Servidor inestable**: El sitio analizado tiene problemas
+- **Hora del día**: Analiza en diferentes horarios
+- **Caché del sitio**: Espera unos minutos entre análisis
+
+<h4>Error &quot;Ruby agent no disponible&quot;</h4>
+<div class="alert alert-info"><strong>Síntomas</strong>: Mensaje sobre agente Ruby no funcional
+
+</div><div class="alert alert-danger"><strong>Impacto</strong>: El análisis funciona pero con menos detalle backend
+
+</div><div class="alert alert-success"><strong>Soluciones</strong>:
+- **No requiere acción del usuario**: El sistema usa análisis alternativo
+- **Para administradores**: Verificar instalación de Ruby en el servidor
+
+<h3>Mensajes de Error Específicos</h3>
+<h4>&quot;URL no válida&quot;</h4>
+<pre><code>Mensaje: &quot;Por favor ingresa una URL válida que comience con http:// o https://&quot;
+Solución: Asegúrate de incluir el protocolo completo
+Ejemplo correcto: https://www.ejemplo.com
+</code></pre>
+<h4>&quot;Sitio no accesible&quot;</h4>
+<pre><code>Mensaje: &quot;No se puede acceder al sitio web especificado&quot;
+Solución: Verifica que el sitio esté online y accessible públicamente
+</code></pre>
+<h4>&quot;Tiempo de análisis agotado&quot;</h4>
+<pre><code>Mensaje: &quot;El análisis tardó demasiado tiempo en completarse&quot;
+Solución: El sitio puede estar muy lento. Intenta de nuevo más tarde
+</code></pre>
+<h4>&quot;Error interno del servidor&quot;</h4>
+<pre><code>Mensaje: &quot;Ocurrió un error interno. Por favor intenta de nuevo&quot;
+Solución: Recarga la página e intenta nuevamente. Si persiste, contacta soporte
+</code></pre>
+<h3>Límites y Restricciones</h3>
+<h4>Límites Técnicos</h4>
+<ul>
+<li><strong>Timeout máximo</strong>: 3 minutos por análisis</li>
+<li><strong>Un análisis por vez</strong>: No se permiten análisis simultáneos</li>
+<li><strong>Sitios públicos solamente</strong>: No puede analizar sitios tras autenticación</li>
+<li><strong>URLs válidas</strong>: Debe comenzar con http:// o https://</li>
+</ul>
+<h4>Limitaciones del Agente Ruby</h4>
+<ul>
+<li><strong>Disponibilidad variable</strong>: Depende de la configuración del servidor</li>
+<li><strong>Sitios Ruby/Rails</strong>: Optimizado para estas tecnologías</li>
+<li><strong>Análisis profundo</strong>: Solo disponible para ciertos tipos de sitios</li>
+</ul>
+<hr>
+<h2>9. Preguntas Frecuentes</h2>
+<h3>Sobre Funcionalidad</h3>
+<p><strong>P: ¿Puedo analizar sitios que requieren login?</strong>
+R: No, la herramienta solo puede analizar páginas públicamente accesibles.</p>
+<p><strong>P: ¿Los análisis afectan el rendimiento de mi sitio?</strong>
+R: No, los análisis son de solo lectura y no impactan el funcionamiento del sitio.</p>
+<p><strong>P: ¿Qué tan precisos son los resultados?</strong>
+R: Los resultados son muy precisos para métricas reales, pero pueden variar por factores de red y servidor.</p>
+<p><strong>P: ¿Puedo analizar aplicaciones móviles?</strong>
+R: No, solo sitios web accesibles mediante navegador.</p>
+<p><strong>P: ¿Se guardan los resultados?</strong>
+R: Sí, los análisis se almacenan en la base de datos para referencia futura.</p>
+<h3>Sobre Interpretación</h3>
+<p><strong>P: ¿Qué puntuación se considera &quot;buena&quot;?</strong>
+R: 90+ es excelente, 70-89 es bueno, 50-69 necesita mejora, &lt;50 es problemático.</p>
+<p><strong>P: ¿Por qué mis puntuaciones varían entre análisis?</strong>
+R: Es normal, factores como carga del servidor, red, y caché pueden causar variaciones de ±10 puntos.</p>
+<p><strong>P: ¿Qué métrica es más importante?</strong>
+R: Para usuarios: LCP y CLS. Para SEO: todas las Core Web Vitals. Para negocio: depende del tipo de sitio.</p>
+<p><strong>P: ¿Cómo comparo con competidores?</strong>
+R: Analiza sitios similares usando la misma herramienta para obtener comparaciones válidas.</p>
+<h3>Sobre Optimización</h3>
+<p><strong>P: ¿Debo optimizar desktop o mobile primero?</strong>
+R: Mobile first - Google usa métricas móviles para ranking.</p>
+<p><strong>P: ¿Cuánto tiempo toman las optimizaciones?</strong>
+R: Optimizaciones simples (caché, compresión): días. Optimizaciones complejas (arquitectura): semanas/meses.</p>
+<p><strong>P: ¿Puedo alcanzar 100 en todas las métricas?</strong>
+R: Es posible pero no siempre práctico. Enfócate en superar los umbrales &quot;buenos&quot;.</p>
+<p><strong>P: ¿Con qué frecuencia debo hacer análisis?</strong>
+R: Después de cambios importantes, mensualmente para monitoreo, semanalmente durante optimizaciones activas.</p>
+<h3>Sobre Problemas Técnicos</h3>
+<p><strong>P: ¿Qué navegadores son compatibles?</strong>
+R: Chrome, Firefox, Safari, Edge (versiones modernas de los últimos 2 años).</p>
+<p><strong>P: ¿Funciona en dispositivos móviles?</strong>
+R: Sí, la interfaz es responsive, pero recomendamos desktop para mejor experiencia.</p>
+<p><strong>P: ¿Necesito instalar algo?</strong>
+R: No, es una aplicación web que funciona completamente en el navegador.</p>
+<p><strong>P: ¿Qué hago si encuentro un bug?</strong>
+R: Recarga la página. Si persiste, documenta los pasos para reproducir y reporta al administrador.</p>
+<hr>
+<h2>10. Glosario de Términos</h2>
+<h3>Términos de Rendimiento Web</h3>
+<p><strong>Backend</strong>
+: La parte del servidor de una aplicación web, incluye base de datos, lógica de negocio, y API.</p>
+<p><strong>Cache-Control</strong>
+: Header HTTP que especifica directivas de almacenamiento en caché para navegadores y proxies.</p>
+<p><strong>CDN (Content Delivery Network)</strong>
+: Red de servidores distribuidos geográficamente que entregan contenido web de manera eficiente.</p>
+<p><strong>Core Web Vitals</strong>
+: Conjunto de métricas específicas que Google considera importantes para la experiencia del usuario.</p>
+<p><strong>CLS (Cumulative Layout Shift)</strong>
+: Métrica que mide la estabilidad visual de una página durante la carga.</p>
+<p><strong>CSP (Content Security Policy)</strong>
+: Header de seguridad que ayuda a prevenir ataques XSS especificando fuentes válidas de contenido.</p>
+<p><strong>FCP (First Contentful Paint)</strong>
+: Tiempo desde que el usuario navega a la página hasta que se renderiza el primer contenido.</p>
+<p><strong>Frontend</strong>
+: La parte visible al usuario de una aplicación web, incluye HTML, CSS, JavaScript, e imágenes.</p>
+<p><strong>HSTS (HTTP Strict Transport Security)</strong>
+: Header de seguridad que obliga a los navegadores a usar conexiones HTTPS.</p>
+<p><strong>HTTP/2</strong>
+: Versión mejorada del protocolo HTTP que permite multiplexación y compresión de headers.</p>
+<p><strong>LCP (Largest Contentful Paint)</strong>
+: Tiempo desde que el usuario navega hasta que se renderiza el elemento de contenido más grande.</p>
+<p><strong>TBT (Total Blocking Time)</strong>
+: Tiempo total durante el cual la página está bloqueada para responder a entrada del usuario.</p>
+<h3>Términos de Ruby/Rails</h3>
+<p><strong>Puma</strong>
+: Servidor web Ruby multi-threaded, comúnmente usado con aplicaciones Rails.</p>
+<p><strong>Rails</strong>
+: Framework web para Ruby que facilita el desarrollo de aplicaciones web mediante convenciones.</p>
+<p><strong>Ruby</strong>
+: Lenguaje de programación orientado a objetos, conocido por su simplicidad y productividad.</p>
+<p><strong>Unicorn</strong>
+: Servidor web Ruby multi-proceso, alternativa a Puma para aplicaciones Rails.</p>
+<p><strong>X-Runtime</strong>
+: Header HTTP específico de Rails que indica el tiempo de procesamiento del servidor.</p>
+<h3>Términos de Seguridad</h3>
+<p><strong>HTTPS</strong>
+: Versión segura del protocolo HTTP que cifra la comunicación entre navegador y servidor.</p>
+<p><strong>SSL/TLS</strong>
+: Protocolos criptográficos que proporcionan seguridad en las comunicaciones por internet.</p>
+<p><strong>X-Frame-Options</strong>
+: Header de seguridad que controla si una página puede ser mostrada en un frame/iframe.</p>
+<h3>Términos de Optimización</h3>
+<p><strong>Compresión</strong>
+: Técnica para reducir el tamaño de archivos antes de enviarlos al navegador (gzip, brotli).</p>
+<p><strong>Minificación</strong>
+: Proceso de eliminar caracteres innecesarios del código para reducir su tamaño.</p>
+<p><strong>Tree Shaking</strong>
+: Técnica de optimización que elimina código JavaScript no utilizado del bundle final.</p>
+<p><strong>WebP</strong>
+: Formato de imagen moderno que proporciona mejor compresión que JPEG y PNG.</p>
+<h3>Términos de Métricas</h3>
+<p><strong>Percentil</strong>
+: Valor estadístico que indica el porcentaje de observaciones que caen por debajo de él.</p>
+<p><strong>Throughput</strong>
+: Cantidad de datos procesados en un período de tiempo determinado.</p>
+<p><strong>Latencia</strong>
+: Tiempo que tarda una solicitud en viajar desde el cliente hasta el servidor y recibir respuesta.</p>
+<p><strong>Bandwidth</strong>
+: Cantidad máxima de datos que pueden transferirse en un tiempo determinado.</p>
+<h3>Términos de Base de Datos</h3>
+<p><strong>Connection Pool</strong>
+: Conjunto de conexiones de base de datos reutilizables para mejorar rendimiento.</p>
+<p><strong>Query Time</strong>
+: Tiempo que tarda la base de datos en ejecutar una consulta específica.</p>
+<p><strong>Slow Query</strong>
+: Consulta de base de datos que tarda más tiempo del esperado en ejecutarse.</p>
+<hr>
+<h2>Conclusión</h2>
+<p>Este manual te proporciona toda la información necesaria para utilizar efectivamente PageSpeed Analyzer. La herramienta está diseñada para ser intuitiva, pero el análisis de rendimiento web es un tema complejo que requiere comprensión de múltiples factores.</p>
+<h3>Recursos Adicionales</h3>
+<ul>
+<li><strong>Documentación Técnica</strong>: Disponible en <code>/design-document</code></li>
+<li><strong>Configuración Docker</strong>: Ver <code>README-DOCKER.md</code></li>
+<li><strong>Código Fuente</strong>: Disponible en el repositorio del proyecto</li>
+</ul>
+<h3>Soporte</h3>
+<p>Para soporte técnico o preguntas avanzadas:</p>
+<ol>
+<li>Consulta la sección de solución de problemas</li>
+<li>Revisa las preguntas frecuentes</li>
+<li>Contacta al administrador del sistema</li>
+</ol>
+<hr>
+<p><strong>Manual generado automáticamente</strong><br><strong>Sistema PageSpeed Analyzer v1.0</strong><br><strong>Julio 2025</strong></p>
+
+    </main>
+
+    <footer class="manual-footer">
+        <div class="container">
+            <p><strong>Manual de Usuario Generado Automáticamente</strong></p>
+            <p>PageSpeed Analyzer con Agente Ruby Integrado v1.0</p>
+            <p>© 2025 - Equipo de Desarrollo</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mejorar experiencia de usuario
+        document.addEventListener('DOMContentLoaded', function() {
+            // Añadir smooth scrolling para enlaces internos
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+            
+            // Añadir indicadores de progreso de lectura
+            const progressBar = document.createElement('div');
+            progressBar.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 0%;
+                height: 3px;
+                background: linear-gradient(to right, #667eea, #764ba2);
+                z-index: 9999;
+                transition: width 0.1s;
+            `;
+            document.body.appendChild(progressBar);
+            
+            window.addEventListener('scroll', function() {
+                const windowHeight = window.innerHeight;
+                const documentHeight = document.documentElement.scrollHeight;
+                const scrollTop = window.pageYOffset;
+                const progress = (scrollTop / (documentHeight - windowHeight)) * 100;
+                progressBar.style.width = Math.min(progress, 100) + '%';
+            });
+        });
+    </script>
+</body>
+</html>

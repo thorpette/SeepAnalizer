@@ -400,6 +400,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Servir manual de usuario
+  app.get('/user-manual', (req, res) => {
+    const fs = require('fs');
+    
+    try {
+      const htmlPath = path.join(process.cwd(), 'Manual-Usuario-PageSpeed-Analyzer.html');
+      const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(htmlContent);
+    } catch (error) {
+      res.status(404).json({ 
+        error: 'Manual de usuario no encontrado. Genera el manual primero usando: node scripts/generate-user-manual.js' 
+      });
+    }
+  });
+
   // Start analysis
   app.post("/api/analyze", async (req, res) => {
     try {
