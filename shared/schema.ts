@@ -1,5 +1,6 @@
 import { pgTable, serial, text, boolean, integer, timestamp, jsonb, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { relations } from "drizzle-orm";
 import { z } from "zod";
 
 // Analysis table for storing website performance analysis
@@ -8,6 +9,11 @@ export const analyses = pgTable("analyses", {
   url: text("url").notNull(),
   device: text("device").notNull().default("mobile"),
   status: text("status").notNull().default("pending"), // 'pending', 'processing', 'completed', 'failed'
+  
+  // Multi-project support
+  projectId: integer("project_id").references(() => projects.id),
+  applicationId: integer("application_id").references(() => applications.id),
+  environmentId: integer("environment_id").references(() => environments.id),
   
   // Performance scores (0-100)
   performanceScore: integer("performance_score"),
@@ -82,6 +88,74 @@ export const analysisHistory = pgTable("analysis_history", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Projects table for multi-project support
+export const projects = pgTable("projects", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Applications within projects
+export const applications = pgTable("applications", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Environments for each application
+export const environments = pgTable("environments", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id").references(() => applications.id).notNull(),
+  name: text("name").notNull(), // dev, staging, prod, etc.
+  displayName: text("display_name").notNull(), // "Desarrollo", "Staging", "Producción"
+  url: text("url").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Relations
+export const projectsRelations = relations(projects, ({ many }) => ({
+  applications: many(applications),
+}));
+
+export const applicationsRelations = relations(applications, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [applications.projectId],
+    references: [projects.id],
+  }),
+  environments: many(environments),
+}));
+
+export const environmentsRelations = relations(environments, ({ one, many }) => ({
+  application: one(applications, {
+    fields: [environments.applicationId],
+    references: [applications.id],
+  }),
+  analyses: many(analyses),
+}));
+
+export const analysesRelations = relations(analyses, ({ one }) => ({
+  project: one(projects, {
+    fields: [analyses.projectId],
+    references: [projects.id],
+  }),
+  application: one(applications, {
+    fields: [analyses.applicationId],
+    references: [applications.id],
+  }),
+  environment: one(environments, {
+    fields: [analyses.environmentId],
+    references: [environments.id],
+  }),
+}));
+
 // Insert and select schemas
 export const insertAnalysisSchema = createInsertSchema(analyses).omit({
   id: true,
@@ -93,8 +167,29 @@ export const insertUserSessionSchema = createInsertSchema(userSessions).omit({
   createdAt: true,
 });
 
+export const insertProjectSchema = createInsertSchema(projects).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertApplicationSchema = createInsertSchema(applications).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertEnvironmentSchema = createInsertSchema(environments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const selectAnalysisSchema = createSelectSchema(analyses);
 export const selectUserSessionSchema = createSelectSchema(userSessions);
+export const selectProjectSchema = createSelectSchema(projects);
+export const selectApplicationSchema = createSelectSchema(applications);
+export const selectEnvironmentSchema = createSelectSchema(environments);
 
 // Legacy compatibility schemas for existing components
 export const performanceAnalysisSchema = z.object({
@@ -162,10 +257,26 @@ export const analysisRequestSchema = z.object({
   device: z.enum(['desktop', 'mobile']).default('desktop'),
 });
 
+// Updated analysis request schema with multi-project support
+export const multiProjectAnalysisRequestSchema = z.object({
+  url: z.string().url().optional(), // Optional if using environment URL
+  device: z.enum(['desktop', 'mobile']).default('desktop'),
+  projectId: z.number().optional(),
+  applicationId: z.number().optional(),
+  environmentId: z.number().optional(),
+});
+
 // Types
 export type Analysis = typeof analyses.$inferSelect;
 export type InsertAnalysis = z.infer<typeof insertAnalysisSchema>;
 export type UserSession = typeof userSessions.$inferSelect;
 export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type Application = typeof applications.$inferSelect;
+export type InsertApplication = z.infer<typeof insertApplicationSchema>;
+export type Environment = typeof environments.$inferSelect;
+export type InsertEnvironment = z.infer<typeof insertEnvironmentSchema>;
 export type PerformanceAnalysis = z.infer<typeof performanceAnalysisSchema>;
 export type AnalysisRequest = z.infer<typeof analysisRequestSchema>;
+export type MultiProjectAnalysisRequest = z.infer<typeof multiProjectAnalysisRequestSchema>;

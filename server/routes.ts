@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { analysisRequestSchema, insertAnalysisSchema } from "@shared/schema";
+import { analysisRequestSchema, insertAnalysisSchema, multiProjectAnalysisRequestSchema } from "@shared/schema";
 import { z } from "zod";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -384,6 +384,106 @@ async function basicBackendAnalysis(url: string) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Multi-project API routes
+  
+  // Projects
+  app.get("/api/projects", async (req, res) => {
+    try {
+      const projects = await storage.getProjects();
+      res.json(projects);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      res.status(500).json({ error: "Error al obtener proyectos" });
+    }
+  });
+
+  app.post("/api/projects", async (req, res) => {
+    try {
+      const project = await storage.createProject(req.body);
+      res.json(project);
+    } catch (error) {
+      console.error("Error creating project:", error);
+      res.status(500).json({ error: "Error al crear proyecto" });
+    }
+  });
+
+  app.get("/api/projects/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const project = await storage.getProject(id);
+      if (!project) {
+        return res.status(404).json({ error: "Proyecto no encontrado" });
+      }
+      res.json(project);
+    } catch (error) {
+      console.error("Error fetching project:", error);
+      res.status(500).json({ error: "Error al obtener proyecto" });
+    }
+  });
+
+  // Applications
+  app.get("/api/projects/:projectId/applications", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const applications = await storage.getApplicationsByProject(projectId);
+      res.json(applications);
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+      res.status(500).json({ error: "Error al obtener aplicaciones" });
+    }
+  });
+
+  app.post("/api/projects/:projectId/applications", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const application = await storage.createApplication({
+        ...req.body,
+        projectId,
+      });
+      res.json(application);
+    } catch (error) {
+      console.error("Error creating application:", error);
+      res.status(500).json({ error: "Error al crear aplicación" });
+    }
+  });
+
+  // Environments
+  app.get("/api/applications/:applicationId/environments", async (req, res) => {
+    try {
+      const applicationId = parseInt(req.params.applicationId);
+      const environments = await storage.getEnvironmentsByApplication(applicationId);
+      res.json(environments);
+    } catch (error) {
+      console.error("Error fetching environments:", error);
+      res.status(500).json({ error: "Error al obtener entornos" });
+    }
+  });
+
+  app.post("/api/applications/:applicationId/environments", async (req, res) => {
+    try {
+      const applicationId = parseInt(req.params.applicationId);
+      const environment = await storage.createEnvironment({
+        ...req.body,
+        applicationId,
+      });
+      res.json(environment);
+    } catch (error) {
+      console.error("Error creating environment:", error);
+      res.status(500).json({ error: "Error al crear entorno" });
+    }
+  });
+
+  // Get complete project structure
+  app.get("/api/project-structure", async (req, res) => {
+    try {
+      const structure = await storage.getProjectStructure();
+      res.json(structure);
+    } catch (error) {
+      console.error("Error fetching project structure:", error);
+      res.status(500).json({ error: "Error al obtener estructura de proyectos" });
+    }
+  });
+
   // Servir documento de diseño funcional
   app.get('/design-document', (req, res) => {
     const fs = require('fs');
@@ -416,17 +516,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Start analysis
+  // Start analysis (updated for multi-project support)
   app.post("/api/analyze", async (req, res) => {
     try {
       console.log('📊 Received analysis request:', req.body);
-      const { url, device } = analysisRequestSchema.parse(req.body);
+      
+      // Try multi-project schema first, fallback to legacy
+      let analysisUrl;
+      let projectContext = {};
+      let device = 'desktop';
+
+      try {
+        const multiProjectData = multiProjectAnalysisRequestSchema.parse(req.body);
+        device = multiProjectData.device;
+        
+        // If environment is selected, get URL from environment
+        if (multiProjectData.environmentId) {
+          const environment = await storage.getEnvironment(multiProjectData.environmentId);
+          if (!environment) {
+            return res.status(400).json({ error: "Entorno no encontrado" });
+          }
+          analysisUrl = environment.url;
+          projectContext = {
+            projectId: multiProjectData.projectId,
+            applicationId: multiProjectData.applicationId,
+            environmentId: multiProjectData.environmentId,
+          };
+        } else if (multiProjectData.url) {
+          analysisUrl = multiProjectData.url;
+          projectContext = {
+            projectId: multiProjectData.projectId,
+            applicationId: multiProjectData.applicationId,
+            environmentId: multiProjectData.environmentId,
+          };
+        } else {
+          return res.status(400).json({ error: "Se requiere URL o entorno" });
+        }
+      } catch {
+        // Fallback to legacy schema
+        const legacyData = analysisRequestSchema.parse(req.body);
+        analysisUrl = legacyData.url;
+        device = legacyData.device;
+      }
 
       // Create initial analysis record
       const initialAnalysis = insertAnalysisSchema.parse({
-        url,
+        url: analysisUrl,
         device,
         status: "pending",
+        ...projectContext,
         performanceScore: 0,
         accessibilityScore: 0,
         bestPracticesScore: 0,
@@ -457,7 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const analysis = await storage.createAnalysis(initialAnalysis);
 
       // Start async analysis
-      analyzeWebsite(url, device)
+      analyzeWebsite(analysisUrl, device)
         .then(async (results) => {
           // Convert results to database format
           const dbUpdates = {

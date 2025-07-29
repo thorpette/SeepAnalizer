@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { Gauge } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProjectSelector } from "@/components/project-selector";
+import { MultiProjectAnalysisForm } from "@/components/multi-project-analysis-form";
 import UrlAnalysisForm from "@/components/url-analysis-form";
 import LoadingState from "@/components/loading-state";
 import PerformanceResults from "@/components/performance-results";
@@ -10,6 +13,14 @@ export default function Home() {
   const [currentAnalysis, setCurrentAnalysis] = useState<PerformanceAnalysis | null>(null);
   const [analysisState, setAnalysisState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [projectSelection, setProjectSelection] = useState<{
+    projectId?: number;
+    applicationId?: number;
+    environmentId?: number;
+    url?: string;
+    device: 'desktop' | 'mobile';
+  } | null>(null);
 
   const handleAnalysisStart = () => {
     setAnalysisState('loading');
@@ -64,14 +75,45 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        {/* URL Analysis Form */}
-        <UrlAnalysisForm
-          onAnalysisStart={handleAnalysisStart}
-          onAnalysisSuccess={handleAnalysisSuccess}
-          onAnalysisError={handleAnalysisError}
-          disabled={analysisState === 'loading'}
-        />
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <Tabs defaultValue="multi-project" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="multi-project">🏢 Análisis Multi-Proyecto</TabsTrigger>
+            <TabsTrigger value="custom-url">🌐 URL Personalizada</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="multi-project" className="mt-6">
+            <div className="space-y-6">
+              <ProjectSelector
+                onSelectionChange={(selection) => {
+                  setProjectSelection(selection);
+                  setDevice(selection.device);
+                }}
+                device={device}
+                onDeviceChange={setDevice}
+              />
+              
+              {projectSelection?.url && (
+                <MultiProjectAnalysisForm
+                  projectSelection={projectSelection}
+                  onAnalysisStart={handleAnalysisStart}
+                  onAnalysisSuccess={handleAnalysisSuccess}
+                  onAnalysisError={handleAnalysisError}
+                  disabled={analysisState === 'loading'}
+                />
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="custom-url" className="mt-6">
+            <UrlAnalysisForm
+              onAnalysisStart={handleAnalysisStart}
+              onAnalysisSuccess={handleAnalysisSuccess}
+              onAnalysisError={handleAnalysisError}
+              disabled={analysisState === 'loading'}
+            />
+          </TabsContent>
+        </Tabs>
 
         {/* Loading State */}
         {analysisState === 'loading' && <LoadingState />}
