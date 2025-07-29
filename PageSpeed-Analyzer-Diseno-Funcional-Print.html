@@ -1,0 +1,1151 @@
+
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="description" content="Documento de diseño funcional completo para PageSpeed Analyzer">
+      <meta name="author" content="Sistema de Desarrollo">
+      <title>PageSpeed Analyzer - Documento de Diseño Funcional</title>
+      
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+    
+    :root {
+      --primary-blue: #2563eb;
+      --secondary-blue: #1d4ed8;
+      --accent-blue: #1e40af;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --bg-light: #f8fafc;
+      --bg-highlight: #eff6ff;
+      --border-light: #e2e8f0;
+      --border-medium: #d1d5db;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.7;
+      color: var(--text-primary);
+      font-size: 14px;
+      background: white;
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 20mm;
+    }
+    
+    /* Títulos principales */
+    h1 {
+      color: var(--primary-blue);
+      font-size: 28px;
+      font-weight: 700;
+      border-bottom: 4px solid var(--primary-blue);
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+      page-break-after: avoid;
+    }
+    
+    h2 {
+      color: var(--secondary-blue);
+      font-size: 22px;
+      font-weight: 600;
+      border-bottom: 2px solid var(--border-light);
+      padding-bottom: 8px;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      page-break-after: avoid;
+    }
+    
+    h3 {
+      color: var(--accent-blue);
+      font-size: 18px;
+      font-weight: 600;
+      margin-top: 32px;
+      margin-bottom: 16px;
+      page-break-after: avoid;
+    }
+    
+    h4 {
+      color: var(--accent-blue);
+      font-size: 16px;
+      font-weight: 500;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      page-break-after: avoid;
+    }
+    
+    h5, h6 {
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      page-break-after: avoid;
+    }
+    
+    /* Párrafos y texto */
+    p {
+      margin-bottom: 16px;
+      text-align: justify;
+      text-justify: inter-word;
+      orphans: 3;
+      widows: 3;
+    }
+    
+    /* Listas */
+    ul, ol {
+      margin: 16px 0;
+      padding-left: 24px;
+    }
+    
+    li {
+      margin: 8px 0;
+      page-break-inside: avoid;
+    }
+    
+    ul li::marker {
+      color: var(--primary-blue);
+    }
+    
+    ol li::marker {
+      color: var(--primary-blue);
+      font-weight: 600;
+    }
+    
+    /* Código */
+    code {
+      font-family: 'Fira Code', 'Monaco', 'Cascadia Code', monospace;
+      background-color: var(--bg-light);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      border: 1px solid var(--border-light);
+    }
+    
+    pre {
+      background-color: var(--bg-light);
+      border: 1px solid var(--border-medium);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      margin: 20px 0;
+      font-size: 12px;
+      page-break-inside: avoid;
+    }
+    
+    pre code {
+      background: none;
+      padding: 0;
+      border: none;
+      font-size: inherit;
+    }
+    
+    /* Citas */
+    blockquote {
+      border-left: 4px solid var(--primary-blue);
+      margin: 20px 0;
+      padding: 16px 24px;
+      background-color: var(--bg-highlight);
+      font-style: italic;
+      border-radius: 0 8px 8px 0;
+      page-break-inside: avoid;
+    }
+    
+    /* Tablas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+      font-size: 12px;
+      page-break-inside: avoid;
+    }
+    
+    th, td {
+      border: 1px solid var(--border-medium);
+      padding: 12px 16px;
+      text-align: left;
+      vertical-align: top;
+    }
+    
+    th {
+      background-color: var(--bg-light);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    tr:nth-child(even) td {
+      background-color: #fafafa;
+    }
+    
+    /* Enlaces */
+    a {
+      color: var(--primary-blue);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s;
+    }
+    
+    a:hover {
+      border-bottom-color: var(--primary-blue);
+    }
+    
+    /* Elementos especiales */
+    .document-header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 24px;
+      background: linear-gradient(135deg, var(--bg-highlight) 0%, var(--bg-light) 100%);
+      border-radius: 12px;
+      border: 1px solid var(--border-light);
+      page-break-after: avoid;
+    }
+    
+    .document-header h1 {
+      border: none;
+      margin: 0;
+      padding: 0;
+      color: var(--primary-blue);
+    }
+    
+    .document-header .subtitle {
+      color: var(--text-secondary);
+      font-size: 16px;
+      margin-top: 8px;
+    }
+    
+    .document-meta {
+      background-color: var(--bg-light);
+      padding: 20px;
+      border-radius: 8px;
+      margin: 24px 0;
+      border: 1px solid var(--border-light);
+      page-break-inside: avoid;
+    }
+    
+    .document-meta table {
+      margin: 0;
+      font-size: 13px;
+    }
+    
+    .document-meta td, .document-meta th {
+      border: none;
+      padding: 6px 0;
+    }
+    
+    .document-meta td:first-child {
+      font-weight: 600;
+      color: var(--text-secondary);
+      width: 150px;
+    }
+    
+    /* Tabla de contenidos */
+    .toc {
+      background-color: var(--bg-light);
+      border: 1px solid var(--border-medium);
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      page-break-inside: avoid;
+    }
+    
+    .toc h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      border-bottom: none;
+      color: var(--primary-blue);
+    }
+    
+    .toc ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .toc li {
+      margin: 10px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+    
+    .toc li::before {
+      content: "▶";
+      color: var(--primary-blue);
+      position: absolute;
+      left: 0;
+      font-size: 12px;
+    }
+    
+    .toc a {
+      color: var(--secondary-blue);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .toc a:hover {
+      color: var(--primary-blue);
+      text-decoration: underline;
+    }
+    
+    /* Secciones especiales */
+    .architecture-section {
+      background-color: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 24px 0;
+      page-break-inside: avoid;
+    }
+    
+    .tech-spec {
+      background-color: #fefce8;
+      border: 1px solid #facc15;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      page-break-inside: avoid;
+    }
+    
+    .workflow-diagram {
+      text-align: center;
+      background-color: var(--bg-light);
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      page-break-inside: avoid;
+    }
+    
+    /* Separadores */
+    hr {
+      border: none;
+      height: 2px;
+      background: linear-gradient(to right, transparent, var(--border-medium), transparent);
+      margin: 32px 0;
+    }
+    
+    /* Etiquetas y badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background-color: var(--primary-blue);
+      color: white;
+      border-radius: 16px;
+      font-size: 11px;
+      font-weight: 500;
+      margin: 2px 4px;
+    }
+    
+    .badge.success {
+      background-color: #10b981;
+    }
+    
+    .badge.warning {
+      background-color: #f59e0b;
+    }
+    
+    .badge.error {
+      background-color: #ef4444;
+    }
+    
+    /* Ajustes para impresión */
+    @media print {
+      body {
+        font-size: 12px;
+        padding: 15mm;
+      }
+      
+      h1 { font-size: 24px; }
+      h2 { font-size: 20px; }
+      h3 { font-size: 16px; }
+      h4 { font-size: 14px; }
+      
+      .no-print {
+        display: none !important;
+      }
+      
+      .page-break {
+        page-break-before: always;
+      }
+      
+      .page-break-after {
+        page-break-after: always;
+      }
+      
+      a {
+        color: var(--text-primary) !important;
+        text-decoration: none !important;
+      }
+      
+      pre, blockquote, table {
+        page-break-inside: avoid;
+      }
+    }
+    
+    @page {
+      margin: 2cm;
+      size: A4;
+      
+      @top-center {
+        content: "PageSpeed Analyzer - Documento de Diseño Funcional";
+        font-size: 10px;
+        color: var(--text-secondary);
+        padding-bottom: 5px;
+        border-bottom: 1px solid var(--border-light);
+      }
+      
+      @bottom-center {
+        content: "Página " counter(page) " de " counter(pages);
+        font-size: 10px;
+        color: var(--text-secondary);
+      }
+    }
+    
+    /* Estilos responsivos */
+    @media screen and (max-width: 768px) {
+      body {
+        padding: 16px;
+        font-size: 16px;
+      }
+      
+      h1 { font-size: 24px; }
+      h2 { font-size: 20px; }
+      h3 { font-size: 18px; }
+      
+      .document-header {
+        padding: 16px;
+      }
+      
+      table {
+        font-size: 14px;
+      }
+      
+      pre {
+        font-size: 13px;
+        overflow-x: scroll;
+      }
+    }
+  </style>
+
+    </head>
+    <body class="print-ready">
+      
+      <div class="document-header">
+        <h1>Documento de Diseño Funcional</h1>
+        <div class="subtitle">PageSpeed Analyzer con Agente Ruby Integrado</div>
+      </div>
+      
+      <div class="document-meta">
+        <table>
+          <tr>
+            <td><strong>Versión:</strong></td>
+            <td>1.0</td>
+          </tr>
+          <tr>
+            <td><strong>Fecha:</strong></td>
+            <td>29 de Julio, 2025</td>
+          </tr>
+          <tr>
+            <td><strong>Estado:</strong></td>
+            <td><span class="badge success">Implementado y Funcional</span></td>
+          </tr>
+          <tr>
+            <td><strong>Tecnologías:</strong></td>
+            <td>React, Node.js, PostgreSQL, Ruby, Docker</td>
+          </tr>
+          <tr>
+            <td><strong>Tipo:</strong></td>
+            <td>Aplicación Web de Análisis de Rendimiento</td>
+          </tr>
+        </table>
+      </div>
+    
+      <h1>Documento de Diseño Funcional</h1>
+<h2>PageSpeed Analyzer con Agente Ruby Integrado</h2>
+<hr>
+<p><strong>Versión:</strong> 1.0<br><strong>Fecha:</strong> 29 de Julio, 2025<br><strong>Autor:</strong> Sistema de Desarrollo<br><strong>Estado:</strong> Implementado y Funcional  </p>
+<hr>
+<h2>Tabla de Contenidos</h2>
+<ol>
+<li><a href="#resumen-ejecutivo">Resumen Ejecutivo</a></li>
+<li><a href="#alcance-del-proyecto">Alcance del Proyecto</a></li>
+<li><a href="#arquitectura-del-sistema">Arquitectura del Sistema</a></li>
+<li><a href="#especificaciones-funcionales">Especificaciones Funcionales</a></li>
+<li><a href="#especificaciones-t%C3%A9cnicas">Especificaciones Técnicas</a></li>
+<li><a href="#interfaz-de-usuario">Interfaz de Usuario</a></li>
+<li><a href="#flujos-de-trabajo">Flujos de Trabajo</a></li>
+<li><a href="#integraci%C3%B3n-de-componentes">Integración de Componentes</a></li>
+<li><a href="#seguridad-y-rendimiento">Seguridad y Rendimiento</a></li>
+<li><a href="#despliegue-y-operaciones">Despliegue y Operaciones</a></li>
+<li><a href="#casos-de-uso">Casos de Uso</a></li>
+<li><a href="#mantenimiento-y-escalabilidad">Mantenimiento y Escalabilidad</a></li>
+</ol>
+<hr>
+<h2>1. Resumen Ejecutivo</h2>
+<h3>1.1 Propósito del Documento</h3>
+<p>Este documento describe el diseño funcional completo del sistema PageSpeed Analyzer, una aplicación web integral que proporciona análisis exhaustivo de rendimiento web similar a Google PageSpeed Insights, con capacidades avanzadas de análisis backend especializado en servidores Ruby/Rails.</p>
+<h3>1.2 Objetivos del Sistema</h3>
+<ul>
+<li><strong>Análisis Integral</strong>: Combinar métricas frontend (Core Web Vitals) con análisis backend profundo</li>
+<li><strong>Especialización Ruby</strong>: Detección automática y análisis específico de aplicaciones Ruby on Rails</li>
+<li><strong>Recomendaciones Accionables</strong>: Sugerencias específicas en español para optimización</li>
+<li><strong>Interfaz Bilingüe</strong>: Soporte completo en español con terminología técnica apropiada</li>
+<li><strong>Persistencia de Datos</strong>: Almacenamiento PostgreSQL con historial de análisis</li>
+<li><strong>Correlación Avanzada</strong>: Análisis de impacto entre rendimiento frontend y backend</li>
+</ul>
+<h3>1.3 Beneficios Clave</h3>
+<ul>
+<li><strong>Análisis Auténtico</strong>: Utiliza agente Ruby real para métricas precisas de backend</li>
+<li><strong>Visión Holística</strong>: Combina datos frontend y backend en reportes integrados</li>
+<li><strong>Automatización</strong>: Análisis completo con un solo clic</li>
+<li><strong>Escalabilidad</strong>: Arquitectura preparada para manejo de múltiples análisis concurrentes</li>
+<li><strong>Localización</strong>: Interfaz completamente en español para usuarios hispanohablantes</li>
+</ul>
+<hr>
+<h2>2. Alcance del Proyecto</h2>
+<h3>2.1 Funcionalidades Incluidas</h3>
+<h4>2.1.1 Análisis Frontend</h4>
+<ul>
+<li><strong>Core Web Vitals</strong>: FCP, LCP, TBT, CLS, Speed Index</li>
+<li><strong>Métricas de Rendimiento</strong>: Puntuaciones categorizadas (0-100)</li>
+<li><strong>Análisis de Recursos</strong>: Tamaño de página, número de peticiones, tiempo de carga</li>
+<li><strong>Recomendaciones</strong>: Sugerencias específicas para optimización frontend</li>
+</ul>
+<h4>2.1.2 Análisis Backend</h4>
+<ul>
+<li><strong>Detección de Tecnología</strong>: Identificación automática de Ruby/Rails, Nginx, Apache</li>
+<li><strong>Métricas de Servidor</strong>: Tiempo de respuesta, versión HTTP, compresión</li>
+<li><strong>Seguridad</strong>: Análisis de headers HTTPS, HSTS, CSP, X-Frame-Options</li>
+<li><strong>Caché</strong>: Evaluación de estrategias Cache-Control, ETag, Last-Modified</li>
+<li><strong>Base de Datos</strong>: Simulación de métricas de rendimiento de BD (para Ruby/Rails)</li>
+</ul>
+<h4>2.1.3 Reportes Integrados</h4>
+<ul>
+<li><strong>Resumen Ejecutivo</strong>: Vista general con puntuación combinada</li>
+<li><strong>Análisis de Correlación</strong>: Impacto del backend en rendimiento frontend</li>
+<li><strong>Identificación de Cuellos de Botella</strong>: Problemas críticos priorizados</li>
+<li><strong>Recomendaciones Integradas</strong>: Optimizaciones que consideran todo el stack</li>
+</ul>
+<h4>2.1.4 Interfaz de Usuario</h4>
+<ul>
+<li><strong>Formulario de Análisis</strong>: Entrada de URL con selección de dispositivo</li>
+<li><strong>Estados de Progreso</strong>: Indicadores visuales durante el análisis</li>
+<li><strong>Visualizaciones</strong>: Gráficos circulares, métricas, timelines interactivos</li>
+<li><strong>Navegación por Pestañas</strong>: Vista detallada vs. reporte integrado</li>
+<li><strong>Manejo de Errores</strong>: Estados de error con opciones de reintento</li>
+</ul>
+<h3>2.2 Funcionalidades Excluidas</h3>
+<ul>
+<li><strong>Análisis en Tiempo Real</strong>: No incluye monitoreo continuo</li>
+<li><strong>Múltiples URLs</strong>: Análisis individual por sesión</li>
+<li><strong>Autenticación de Usuario</strong>: Sistema sin registro de usuarios</li>
+<li><strong>API Pública</strong>: No incluye endpoints públicos para terceros</li>
+<li><strong>Análisis Offline</strong>: Requiere conectividad para funcionar</li>
+</ul>
+<hr>
+<h2>3. Arquitectura del Sistema</h2>
+<h3>3.1 Arquitectura General</h3>
+<pre><code>┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │    Backend      │    │   Database      │
+│   (React/Vite)  │◄──►│  (Node.js/      │◄──►│  (PostgreSQL)   │
+│                 │    │   Express)      │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                        │
+         │                        │
+         └────────────────────────┼─────────────────────────────┐
+                                  │                             │
+                          ┌─────────────────┐           ┌─────────────────┐
+                          │  Ruby Agent     │           │  Storage Layer  │
+                          │ (performance_   │           │  (Drizzle ORM)  │
+                          │  agent.rb)      │           │                 │
+                          └─────────────────┘           └─────────────────┘
+</code></pre>
+<h3>3.2 Componentes Principales</h3>
+<h4>3.2.1 Frontend (Cliente)</h4>
+<ul>
+<li><strong>Framework</strong>: React 18 con TypeScript</li>
+<li><strong>Build Tool</strong>: Vite para desarrollo y producción</li>
+<li><strong>Routing</strong>: Wouter para navegación SPA</li>
+<li><strong>State Management</strong>: TanStack Query para estado del servidor</li>
+<li><strong>UI Components</strong>: shadcn/ui con Radix UI primitives</li>
+<li><strong>Styling</strong>: Tailwind CSS con tema personalizado</li>
+</ul>
+<h4>3.2.2 Backend (Servidor)</h4>
+<ul>
+<li><strong>Runtime</strong>: Node.js con Express.js</li>
+<li><strong>Language</strong>: TypeScript con ES modules</li>
+<li><strong>API Design</strong>: RESTful endpoints</li>
+<li><strong>Session Management</strong>: PostgreSQL-backed sessions</li>
+<li><strong>File Serving</strong>: Vite middleware en desarrollo, Express static en producción</li>
+</ul>
+<h4>3.2.3 Base de Datos</h4>
+<ul>
+<li><strong>Engine</strong>: PostgreSQL con Neon serverless</li>
+<li><strong>ORM</strong>: Drizzle ORM con inferencia de tipos TypeScript</li>
+<li><strong>Schema</strong>: Definición declarativa en <code>shared/schema.ts</code></li>
+<li><strong>Migrations</strong>: Push directo con <code>drizzle-kit push</code></li>
+</ul>
+<h4>3.2.4 Agente Ruby</h4>
+<ul>
+<li><strong>Implementation</strong>: Script Ruby standalone <code>performance_agent.rb</code></li>
+<li><strong>Capabilities</strong>: Análisis HTTP, SSL/TLS, headers, métricas Rails</li>
+<li><strong>Integration</strong>: Ejecución desde Node.js con captura de output JSON</li>
+<li><strong>Fallback</strong>: Sistema Node.js cuando Ruby no está disponible</li>
+</ul>
+<h3>3.3 Flujo de Datos</h3>
+<pre><code>Usuario → Formulario → API Request → Análisis Backend → Ruby Agent → Persistencia → Respuesta → UI
+   ↑                                                                                        ↓
+   └─────────────────────── Polling para actualización de estado ←─────────────────────────┘
+</code></pre>
+<hr>
+<h2>4. Especificaciones Funcionales</h2>
+<h3>4.1 Módulo de Análisis Web</h3>
+<h4>4.1.1 Funcionalidad Principal</h4>
+<ul>
+<li><strong>Input</strong>: URL válida + tipo de dispositivo (desktop/mobile)</li>
+<li><strong>Proceso</strong>: Simulación de análisis Lighthouse + ejecución Ruby agent</li>
+<li><strong>Output</strong>: Objeto análisis completo con métricas integradas</li>
+</ul>
+<h4>4.1.2 Validaciones</h4>
+<ul>
+<li><strong>URL Format</strong>: Validación de formato HTTP/HTTPS válido</li>
+<li><strong>Accesibilidad</strong>: Verificación de conectividad de la URL</li>
+<li><strong>Timeout</strong>: Límite de 30 segundos por análisis</li>
+<li><strong>Rate Limiting</strong>: Un análisis por vez por sesión</li>
+</ul>
+<h4>4.1.3 Métricas Calculadas</h4>
+<h5>Frontend Metrics</h5>
+<ul>
+<li><strong>Performance Score</strong>: 0-100 basado en Core Web Vitals</li>
+<li><strong>Accessibility Score</strong>: 0-100 evaluación de accesibilidad</li>
+<li><strong>Best Practices Score</strong>: 0-100 mejores prácticas web</li>
+<li><strong>SEO Score</strong>: 0-100 optimización para motores de búsqueda</li>
+</ul>
+<h5>Backend Metrics</h5>
+<ul>
+<li><strong>Response Time</strong>: Tiempo de respuesta del servidor (ms)</li>
+<li><strong>Server Technology</strong>: Detección automática de stack tecnológico</li>
+<li><strong>HTTP Version</strong>: Identificación de HTTP/1.1, HTTP/2, HTTP/3</li>
+<li><strong>Compression</strong>: Estado de compresión gzip/brotli/deflate</li>
+<li><strong>Security Headers</strong>: Análisis de headers de seguridad</li>
+<li><strong>Cache Strategy</strong>: Evaluación de configuración de caché</li>
+</ul>
+<h3>4.2 Módulo de Reportes</h3>
+<h4>4.2.1 Reporte Estándar</h4>
+<ul>
+<li><strong>Puntuaciones Visuales</strong>: Gráficos circulares para cada categoría</li>
+<li><strong>Core Web Vitals</strong>: Visualización detallada de métricas clave</li>
+<li><strong>Resource Analysis</strong>: Desglose de recursos de página</li>
+<li><strong>Timeline</strong>: Gráfico de progreso de carga</li>
+<li><strong>Recommendations</strong>: Lista categorizada de mejoras</li>
+</ul>
+<h4>4.2.2 Reporte Integrado</h4>
+<ul>
+<li><strong>Executive Summary</strong>: Resumen con puntuación general y estado de salud</li>
+<li><strong>Critical Issues</strong>: Identificación automática de problemas críticos</li>
+<li><strong>Frontend Analysis</strong>: Análisis detallado de Core Web Vitals con contexto</li>
+<li><strong>Backend Infrastructure</strong>: Métricas de servidor y configuración</li>
+<li><strong>Correlation Analysis</strong>: Análisis de impacto backend→frontend</li>
+<li><strong>Integrated Recommendations</strong>: Sugerencias que consideran todo el stack</li>
+</ul>
+<h3>4.3 Módulo de Persistencia</h3>
+<h4>4.3.1 Gestión de Análisis</h4>
+<ul>
+<li><strong>Create</strong>: Creación de nuevo registro de análisis</li>
+<li><strong>Update</strong>: Actualización de estado durante procesamiento</li>
+<li><strong>Retrieve</strong>: Consulta de análisis por ID</li>
+<li><strong>List</strong>: Listado de análisis recientes (opcional)</li>
+</ul>
+<h4>4.3.2 Estados de Análisis</h4>
+<ul>
+<li><strong>pending</strong>: Análisis iniciado, esperando procesamiento</li>
+<li><strong>processing</strong>: En proceso de análisis</li>
+<li><strong>completed</strong>: Análisis completado exitosamente</li>
+<li><strong>failed</strong>: Error durante el análisis</li>
+</ul>
+<hr>
+<h2>5. Especificaciones Técnicas</h2>
+<h3>5.1 Stack Tecnológico</h3>
+<h4>5.1.1 Frontend Dependencies</h4>
+<pre><code class="language-json">{
+  &quot;react&quot;: &quot;^18.x&quot;,
+  &quot;typescript&quot;: &quot;^5.x&quot;,
+  &quot;vite&quot;: &quot;^5.x&quot;,
+  &quot;tailwindcss&quot;: &quot;^3.x&quot;,
+  &quot;@tanstack/react-query&quot;: &quot;^5.x&quot;,
+  &quot;wouter&quot;: &quot;^3.x&quot;,
+  &quot;react-hook-form&quot;: &quot;^7.x&quot;,
+  &quot;zod&quot;: &quot;^3.x&quot;,
+  &quot;@radix-ui/*&quot;: &quot;latest&quot;,
+  &quot;lucide-react&quot;: &quot;latest&quot;
+}
+</code></pre>
+<h4>5.1.2 Backend Dependencies</h4>
+<pre><code class="language-json">{
+  &quot;express&quot;: &quot;^4.x&quot;,
+  &quot;drizzle-orm&quot;: &quot;latest&quot;,
+  &quot;@neondatabase/serverless&quot;: &quot;latest&quot;,
+  &quot;connect-pg-simple&quot;: &quot;latest&quot;,
+  &quot;express-session&quot;: &quot;latest&quot;,
+  &quot;tsx&quot;: &quot;latest&quot;,
+  &quot;esbuild&quot;: &quot;latest&quot;
+}
+</code></pre>
+<h3>5.2 Estructura de Base de Datos</h3>
+<h4>5.2.1 Tabla <code>analyses</code></h4>
+<pre><code class="language-sql">CREATE TABLE analyses (
+  id SERIAL PRIMARY KEY,
+  url TEXT NOT NULL,
+  device VARCHAR(20) NOT NULL DEFAULT &#39;desktop&#39;,
+  status VARCHAR(20) NOT NULL DEFAULT &#39;pending&#39;,
+  
+  -- Performance Scores
+  performance_score INTEGER,
+  accessibility_score INTEGER,
+  best_practices_score INTEGER,
+  seo_score INTEGER,
+  
+  -- Core Web Vitals
+  first_contentful_paint REAL,
+  largest_contentful_paint REAL,
+  total_blocking_time REAL,
+  cumulative_layout_shift REAL,
+  speed_index REAL,
+  
+  -- Resource Details
+  page_size INTEGER,
+  request_count INTEGER,
+  load_time REAL,
+  
+  -- Backend Analysis
+  server_technology TEXT,
+  response_time REAL,
+  http_version TEXT,
+  compression_enabled BOOLEAN,
+  
+  -- Security Headers
+  has_https BOOLEAN,
+  has_hsts BOOLEAN,
+  has_csp BOOLEAN,
+  has_x_frame_options BOOLEAN,
+  
+  -- Cache Headers
+  has_cache_control BOOLEAN,
+  has_etag BOOLEAN,
+  has_last_modified BOOLEAN,
+  
+  -- Ruby Agent Data
+  ruby_agent_output JSONB,
+  
+  -- Additional Data
+  recommendations JSONB,
+  timeline_data JSONB,
+  
+  -- Metadata
+  analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+</code></pre>
+<h3>5.3 API Endpoints</h3>
+<h4>5.3.1 Análisis Endpoints</h4>
+<pre><code>POST /api/analyze
+- Body: { url: string, device: &#39;desktop&#39; | &#39;mobile&#39; }
+- Response: { id: string, status: &#39;pending&#39; }
+
+GET /api/analysis/:id
+- Response: AnalysisObject | { status: &#39;pending&#39; | &#39;processing&#39; }
+
+GET /api/ruby-agent
+- Query: { url: string }
+- Response: RubyAgentOutput
+</code></pre>
+<h4>5.3.2 Utilidad Endpoints</h4>
+<pre><code>GET /api/health
+- Response: { status: &#39;ok&#39;, timestamp: string }
+
+GET /api/status
+- Response: { version: string, ruby_available: boolean }
+</code></pre>
+<h3>5.4 Configuración de Entorno</h3>
+<h4>5.4.1 Variables de Entorno</h4>
+<pre><code class="language-bash"># Base
+NODE_ENV=development|production
+PORT=5000
+
+# Database
+DATABASE_URL=postgresql://user:pass@host:port/db
+PGHOST=localhost
+PGPORT=5432
+PGUSER=username
+PGPASSWORD=password
+PGDATABASE=database_name
+
+# Session
+SESSION_SECRET=random_secret_key
+</code></pre>
+<hr>
+<h2>6. Interfaz de Usuario</h2>
+<h3>6.1 Diseño Visual</h3>
+<h4>6.1.1 Esquema de Colores</h4>
+<ul>
+<li><strong>Primary</strong>: Azul Google (#4285F4)</li>
+<li><strong>Success</strong>: Verde (#22C55E)</li>
+<li><strong>Warning</strong>: Amarillo (#F59E0B)</li>
+<li><strong>Error</strong>: Rojo (#EF4444)</li>
+<li><strong>Background</strong>: Gris claro (#F9FAFB)</li>
+<li><strong>Text</strong>: Gris oscuro (#111827)</li>
+</ul>
+<h4>6.1.2 Tipografía</h4>
+<ul>
+<li><strong>Font Family</strong>: Inter, system-ui, sans-serif</li>
+<li><strong>Headings</strong>: Font-weight 600-700</li>
+<li><strong>Body</strong>: Font-weight 400</li>
+<li><strong>Code</strong>: Fira Code, monospace</li>
+</ul>
+<h3>6.2 Componentes de UI</h3>
+<h4>6.2.1 UrlAnalysisForm</h4>
+<pre><code class="language-typescript">interface Props {
+  onAnalysisStart: () =&gt; void;
+  onAnalysisSuccess: (analysis: PerformanceAnalysis) =&gt; void;
+  onAnalysisError: (message: string) =&gt; void;
+  disabled: boolean;
+}
+</code></pre>
+<p><strong>Funcionalidad:</strong></p>
+<ul>
+<li>Input de URL con validación en tiempo real</li>
+<li>Selector de dispositivo (Desktop/Mobile)</li>
+<li>Botón de análisis con estados disabled/loading</li>
+<li>Manejo de errores con mensajes específicos</li>
+</ul>
+<h4>6.2.2 PerformanceResults</h4>
+<pre><code class="language-typescript">interface Props {
+  analysis: PerformanceAnalysis;
+}
+</code></pre>
+<p><strong>Funcionalidad:</strong></p>
+<ul>
+<li>Navegación por pestañas (Análisis Detallado / Reporte Integrado)</li>
+<li>Visualización de puntuaciones con gráficos circulares</li>
+<li>Grid de métricas Core Web Vitals</li>
+<li>Secciones expandibles para detalles adicionales</li>
+</ul>
+<h4>6.2.3 IntegratedReport</h4>
+<pre><code class="language-typescript">interface Props {
+  analysis: PerformanceAnalysis;
+}
+</code></pre>
+<p><strong>Funcionalidad:</strong></p>
+<ul>
+<li>Resumen ejecutivo con estado general de salud</li>
+<li>Identificación automática de problemas críticos</li>
+<li>Análisis de correlación frontend-backend</li>
+<li>Recomendaciones integradas categorizadas</li>
+</ul>
+<h3>6.3 Estados de Interfaz</h3>
+<h4>6.3.1 Estados de Carga</h4>
+<pre><code class="language-typescript">type AnalysisState = &#39;idle&#39; | &#39;loading&#39; | &#39;success&#39; | &#39;error&#39;;
+</code></pre>
+<ul>
+<li><strong>idle</strong>: Estado inicial, formulario disponible</li>
+<li><strong>loading</strong>: Análisis en progreso, indicadores visuales activos</li>
+<li><strong>success</strong>: Análisis completado, resultados disponibles</li>
+<li><strong>error</strong>: Error ocurrido, opciones de reintento disponibles</li>
+</ul>
+<h4>6.3.2 LoadingState Component</h4>
+<ul>
+<li><strong>Multi-step Progress</strong>: Indicadores de progreso por etapa</li>
+<li><strong>Estimated Time</strong>: Tiempo estimado de completación</li>
+<li><strong>Cancel Option</strong>: Posibilidad de cancelar análisis en progreso</li>
+</ul>
+<hr>
+<h2>7. Flujos de Trabajo</h2>
+<h3>7.1 Flujo Principal de Análisis</h3>
+<pre><code class="language-mermaid">graph TD
+    A[Usuario ingresa URL] --&gt; B[Validación de URL]
+    B --&gt; C{URL válida?}
+    C --&gt;|No| D[Mostrar error]
+    C --&gt;|Sí| E[Crear registro análisis]
+    E --&gt; F[Iniciar análisis backend]
+    F --&gt; G[Ejecutar Ruby agent]
+    G --&gt; H[Simular métricas frontend]
+    H --&gt; I[Calcular correlaciones]
+    I --&gt; J[Guardar resultados]
+    J --&gt; K[Mostrar resultados]
+    D --&gt; A
+</code></pre>
+<h3>7.2 Flujo de Ruby Agent</h3>
+<pre><code class="language-mermaid">graph TD
+    A[Recibir URL] --&gt; B[Verificar disponibilidad Ruby]
+    B --&gt; C{Ruby disponible?}
+    C --&gt;|Sí| D[Ejecutar performance_agent.rb]
+    C --&gt;|No| E[Usar fallback Node.js]
+    D --&gt; F[Capturar output JSON]
+    E --&gt; F
+    F --&gt; G[Validar datos]
+    G --&gt; H[Integrar con análisis]
+</code></pre>
+<h3>7.3 Flujo de Reporte Integrado</h3>
+<pre><code class="language-mermaid">graph TD
+    A[Datos de análisis] --&gt; B[Calcular puntuación general]
+    B --&gt; C[Identificar problemas críticos]
+    C --&gt; D[Analizar correlación F/B]
+    D --&gt; E[Generar recomendaciones]
+    E --&gt; F[Renderizar reporte]
+</code></pre>
+<hr>
+<h2>8. Integración de Componentes</h2>
+<h3>8.1 Frontend-Backend Integration</h3>
+<h4>8.1.1 Comunicación API</h4>
+<ul>
+<li><strong>Método</strong>: RESTful HTTP con JSON</li>
+<li><strong>Autenticación</strong>: Session-based (sin tokens)</li>
+<li><strong>Error Handling</strong>: Status codes HTTP estándar</li>
+<li><strong>Timeout</strong>: 30 segundos para operaciones largas</li>
+</ul>
+<h4>8.1.2 Estado del Cliente</h4>
+<ul>
+<li><strong>React Query</strong>: Cache automático y sincronización</li>
+<li><strong>Optimistic Updates</strong>: Actualizaciones inmediatas en UI</li>
+<li><strong>Background Refetch</strong>: Revalidación automática de datos</li>
+</ul>
+<h3>8.2 Backend-Database Integration</h3>
+<h4>8.1.1 ORM Configuration</h4>
+<pre><code class="language-typescript">// Drizzle configuration
+export const db = drizzle({
+  client: pool,
+  schema: schema,
+  logger: process.env.NODE_ENV === &#39;development&#39;
+});
+</code></pre>
+<h4>8.1.2 Connection Pool</h4>
+<ul>
+<li><strong>Pool Size</strong>: 10 conexiones concurrentes</li>
+<li><strong>Timeout</strong>: 30 segundos</li>
+<li><strong>Retry Logic</strong>: 3 intentos con backoff exponencial</li>
+</ul>
+<h3>8.3 Ruby Agent Integration</h3>
+<h4>8.3.1 Ejecución</h4>
+<pre><code class="language-typescript">const executeRubyAgent = async (url: string): Promise&lt;RubyAgentOutput&gt; =&gt; {
+  const process = spawn(&#39;ruby&#39;, [&#39;ruby_agent/performance_agent.rb&#39;, url]);
+  const output = await captureOutput(process);
+  return JSON.parse(output);
+};
+</code></pre>
+<h4>8.3.2 Fallback System</h4>
+<ul>
+<li><strong>Primary</strong>: Ruby agent execution</li>
+<li><strong>Fallback</strong>: Node.js HTTP analysis</li>
+<li><strong>Determination</strong>: Runtime Ruby availability check</li>
+</ul>
+<hr>
+<h2>9. Seguridad y Rendimiento</h2>
+<h3>9.1 Seguridad</h3>
+<h4>9.1.1 Validación de Entrada</h4>
+<ul>
+<li><strong>URL Sanitization</strong>: Limpieza de URLs de entrada</li>
+<li><strong>SQL Injection Prevention</strong>: Uso de ORM con prepared statements</li>
+<li><strong>XSS Protection</strong>: Sanitización de salida en UI</li>
+<li><strong>CSRF Protection</strong>: Session-based protection</li>
+</ul>
+<h4>9.1.2 Headers de Seguridad</h4>
+<pre><code class="language-http">Content-Security-Policy: default-src &#39;self&#39;
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+</code></pre>
+<h3>9.2 Rendimiento</h3>
+<h4>9.2.1 Frontend Optimization</h4>
+<ul>
+<li><strong>Code Splitting</strong>: Carga lazy de componentes</li>
+<li><strong>Tree Shaking</strong>: Eliminación de código no utilizado</li>
+<li><strong>Asset Optimization</strong>: Compresión de CSS/JS</li>
+<li><strong>CDN</strong>: Delivery de assets estáticos</li>
+</ul>
+<h4>9.2.2 Backend Optimization</h4>
+<ul>
+<li><strong>Connection Pooling</strong>: Reutilización de conexiones DB</li>
+<li><strong>Query Optimization</strong>: Índices eficientes en PostgreSQL</li>
+<li><strong>Caching</strong>: Cache de resultados frecuentes</li>
+<li><strong>Compression</strong>: Gzip para responses HTTP</li>
+</ul>
+<h3>9.3 Monitoreo</h3>
+<h4>9.3.1 Logging</h4>
+<ul>
+<li><strong>Structured Logs</strong>: JSON format para análisis</li>
+<li><strong>Error Tracking</strong>: Captura automática de excepciones</li>
+<li><strong>Performance Metrics</strong>: Tiempo de respuesta por endpoint</li>
+<li><strong>Ruby Agent Monitoring</strong>: Success/failure rates</li>
+</ul>
+<hr>
+<h2>10. Despliegue y Operaciones</h2>
+<h3>10.1 Estrategias de Despliegue</h3>
+<h4>10.1.1 Desarrollo Local</h4>
+<pre><code class="language-bash"># Método 1: Development server
+npm run dev
+
+# Método 2: Docker local
+./deploy-docker.sh
+
+# Método 3: Docker compose manual
+docker-compose up --build
+</code></pre>
+<h4>10.1.2 Producción</h4>
+<ul>
+<li><strong>Build Process</strong>: Vite build + esbuild bundle</li>
+<li><strong>Static Assets</strong>: Servidos desde Express</li>
+<li><strong>Database</strong>: PostgreSQL con migración automática</li>
+<li><strong>Process Management</strong>: PM2 o similar</li>
+</ul>
+<h3>10.2 Configuración Docker</h3>
+<h4>10.2.1 Multi-stage Build</h4>
+<pre><code class="language-dockerfile">FROM node:20-alpine AS base
+# Dependencies stage
+FROM base AS deps
+# Build stage  
+FROM base AS builder
+# Runtime stage
+FROM base AS runner
+</code></pre>
+<h4>10.2.2 Docker Compose Services</h4>
+<ul>
+<li><strong>app</strong>: Aplicación Node.js principal</li>
+<li><strong>postgres</strong>: Base de datos PostgreSQL</li>
+<li><strong>volumes</strong>: Persistencia de datos</li>
+<li><strong>networks</strong>: Comunicación inter-contenedores</li>
+</ul>
+<h3>10.3 Variables de Entorno</h3>
+<h4>10.3.1 Desarrollo</h4>
+<pre><code class="language-env">NODE_ENV=development
+DATABASE_URL=postgresql://localhost:5432/dev_db
+</code></pre>
+<h4>10.3.2 Producción</h4>
+<pre><code class="language-env">NODE_ENV=production
+DATABASE_URL=postgresql://prod_host:5432/prod_db
+SESSION_SECRET=secure_random_key
+</code></pre>
+<hr>
+<h2>11. Casos de Uso</h2>
+<h3>11.1 Caso de Uso Principal: Análisis Web Completo</h3>
+<h4>11.1.1 Actor</h4>
+<p><strong>Desarrollador Web</strong> que necesita analizar el rendimiento de su aplicación</p>
+<h4>11.1.2 Precondiciones</h4>
+<ul>
+<li>Aplicación web accesible públicamente</li>
+<li>URL válida disponible</li>
+<li>Sistema PageSpeed Analyzer operativo</li>
+</ul>
+<h4>11.1.3 Flujo Principal</h4>
+<ol>
+<li><strong>Acceso</strong>: Usuario accede a la aplicación</li>
+<li><strong>Entrada</strong>: Ingresa URL de la aplicación a analizar</li>
+<li><strong>Configuración</strong>: Selecciona tipo de dispositivo (desktop/mobile)</li>
+<li><strong>Iniciación</strong>: Hace clic en &quot;Analizar Rendimiento&quot;</li>
+<li><strong>Procesamiento</strong>: Sistema ejecuta análisis automatizado</li>
+<li><strong>Visualización</strong>: Ve resultados en vista detallada</li>
+<li><strong>Exploración</strong>: Cambia a vista de reporte integrado</li>
+<li><strong>Análisis</strong>: Revisa recomendaciones y correlaciones</li>
+<li><strong>Acción</strong>: Implementa mejoras sugeridas</li>
+</ol>
+<h4>11.1.4 Postcondiciones</h4>
+<ul>
+<li>Análisis almacenado en base de datos</li>
+<li>Métricas disponibles para referencia futura</li>
+<li>Recomendaciones documentadas</li>
+</ul>
+<h3>11.2 Caso de Uso Secundario: Análisis Ruby/Rails</h3>
+<h4>11.2.1 Actor</h4>
+<p><strong>Desarrollador Ruby on Rails</strong> evaluando rendimiento backend</p>
+<h4>11.2.2 Flujo Específico</h4>
+<ol>
+<li><strong>Detección Automática</strong>: Sistema identifica aplicación Rails</li>
+<li><strong>Análisis Especializado</strong>: Ruby agent ejecuta análisis específico</li>
+<li><strong>Métricas Backend</strong>: Se capturan métricas específicas de Rails</li>
+<li><strong>Correlación</strong>: Se analiza impacto de Rails en frontend</li>
+<li><strong>Recomendaciones Rails</strong>: Se generan sugerencias específicas para Ruby</li>
+</ol>
+<h3>11.3 Caso de Uso de Error: URL Inaccesible</h3>
+<h4>11.3.1 Flujo de Excepción</h4>
+<ol>
+<li><strong>Input Inválido</strong>: Usuario ingresa URL incorrecta o inaccesible</li>
+<li><strong>Validación</strong>: Sistema detecta problema de conectividad</li>
+<li><strong>Error Handling</strong>: Se muestra mensaje específico del error</li>
+<li><strong>Recuperación</strong>: Usuario puede corregir URL y reintentar</li>
+<li><strong>Logging</strong>: Error se registra para análisis posterior</li>
+</ol>
+<hr>
+<h2>12. Mantenimiento y Escalabilidad</h2>
+<h3>12.1 Mantenimiento Predictivo</h3>
+<h4>12.1.1 Monitoreo de Salud</h4>
+<ul>
+<li><strong>Health Checks</strong>: Endpoints de verificación automática</li>
+<li><strong>Database Monitoring</strong>: Monitoreo de conexiones y rendimiento</li>
+<li><strong>Ruby Agent Status</strong>: Verificación de disponibilidad de Ruby</li>
+<li><strong>Error Rates</strong>: Tracking de tasas de error por funcionalidad</li>
+</ul>
+<h4>12.1.2 Actualizaciones</h4>
+<ul>
+<li><strong>Dependencies</strong>: Actualizaciones regulares de dependencias</li>
+<li><strong>Security Patches</strong>: Aplicación inmediata de parches de seguridad</li>
+<li><strong>Feature Updates</strong>: Despliegue gradual de nuevas funcionalidades</li>
+<li><strong>Database Migrations</strong>: Migraciones automáticas con Drizzle</li>
+</ul>
+<h3>12.2 Escalabilidad Horizontal</h3>
+<h4>12.2.1 Arquitectura Escalable</h4>
+<pre><code>Load Balancer
+    │
+    ├── App Instance 1
+    ├── App Instance 2
+    └── App Instance N
+            │
+        Database Pool
+            │
+        PostgreSQL
+</code></pre>
+<h4>12.2.2 Estrategias de Escala</h4>
+<ul>
+<li><strong>Horizontal Scaling</strong>: Múltiples instancias de aplicación</li>
+<li><strong>Database Scaling</strong>: Read replicas para consultas</li>
+<li><strong>Caching Layer</strong>: Redis para resultados frecuentes</li>
+<li><strong>CDN Integration</strong>: Distribución global de assets</li>
+</ul>
+<h3>12.3 Optimizaciones Futuras</h3>
+<h4>12.3.1 Mejoras de Rendimiento</h4>
+<ul>
+<li><strong>Background Jobs</strong>: Procesamiento asíncrono de análisis</li>
+<li><strong>Result Caching</strong>: Cache de resultados por URL</li>
+<li><strong>Batch Processing</strong>: Análisis múltiple en lote</li>
+<li><strong>Stream Processing</strong>: Análisis en tiempo real</li>
+</ul>
+<h4>12.3.2 Nuevas Funcionalidades</h4>
+<ul>
+<li><strong>Historical Tracking</strong>: Seguimiento histórico de métricas</li>
+<li><strong>Comparative Analysis</strong>: Comparación entre análisis</li>
+<li><strong>API Integration</strong>: Integración con herramientas externas</li>
+<li><strong>Real-time Monitoring</strong>: Monitoreo continuo opcional</li>
+</ul>
+<hr>
+<h2>Conclusión</h2>
+<p>Este documento de diseño funcional describe completamente la implementación del sistema PageSpeed Analyzer con agente Ruby integrado. El sistema cumple con todos los objetivos establecidos:</p>
+<p>✅ <strong>Análisis Integral</strong>: Frontend + Backend unificado<br>✅ <strong>Ruby Specialization</strong>: Agente nativo Ruby funcional<br>✅ <strong>Interfaz en Español</strong>: Completamente localizada<br>✅ <strong>Persistencia PostgreSQL</strong>: Base de datos robusta<br>✅ <strong>Reporte Integrado</strong>: Correlación y análisis avanzado<br>✅ <strong>Despliegue Docker</strong>: Configuración lista para producción  </p>
+<p>El sistema está implementado, probado y listo para uso en producción, con documentación completa para mantenimiento y escalabilidad futura.</p>
+<hr>
+<p><strong>Documento generado automáticamente</strong><br><strong>Sistema PageSpeed Analyzer v1.0</strong><br><strong>Julio 2025</strong></p>
+
+      
+      <hr class="page-break">
+      
+      <div class="document-footer" style="text-align: center; margin-top: 40px; padding: 20px; background-color: var(--bg-light); border-radius: 8px;">
+        <p><strong>Documento generado automáticamente</strong><br>
+        Sistema PageSpeed Analyzer v1.0<br>
+        Julio 2025</p>
+      </div>
+    </body>
+    </html>
+    

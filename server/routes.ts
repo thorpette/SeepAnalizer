@@ -384,6 +384,22 @@ async function basicBackendAnalysis(url: string) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Servir documento de diseño funcional
+  app.get('/design-document', (req, res) => {
+    const fs = require('fs');
+    
+    try {
+      const htmlPath = path.join(process.cwd(), 'PageSpeed-Analyzer-Diseno-Funcional.html');
+      const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(htmlContent);
+    } catch (error) {
+      res.status(404).json({ 
+        error: 'Documento no encontrado. Genera el documento primero usando: node scripts/generate-html-document.js' 
+      });
+    }
+  });
+
   // Start analysis
   app.post("/api/analyze", async (req, res) => {
     try {

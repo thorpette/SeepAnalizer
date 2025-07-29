@@ -169,3 +169,14 @@ The system includes a standalone Ruby performance agent (`ruby_agent/performance
 - **Web Interface**: Dedicated testing page at `/ruby-agent` route
 
 The application is designed as a monorepo with clear separation between client, server, shared code, and the Ruby agent, making it maintainable and scalable for future enhancements like real Lighthouse integration.
+
+## Documentation
+
+### Comprehensive Design Document
+- **Complete Functional Design Document**: Generated in HTML format with professional styling
+- **Content**: 12 sections covering architecture, specifications, workflows, deployment strategies
+- **Access**: Available at `/design-document` endpoint and as standalone HTML file
+- **PDF Generation**: Instructions provided for browser-based PDF conversion
+- **Coverage**: Executive summary, technical specs, user interface, security, scalability
+- **Language**: Fully documented in Spanish for localized development teams
+- **Format**: Professional layout optimized for printing and digital viewing
