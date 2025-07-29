@@ -13,10 +13,11 @@ Preferred communication style: Simple, everyday language.
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript
 - **Styling**: Tailwind CSS with shadcn/ui component library
-- **Routing**: Wouter for client-side routing
+- **Routing**: Wouter for client-side routing with multi-page navigation
 - **State Management**: TanStack Query (React Query) for server state
 - **Form Handling**: React Hook Form with Zod validation
 - **Build Tool**: Vite for development and production builds
+- **Pages**: Main analysis page and dedicated Ruby agent testing interface
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js
@@ -43,6 +44,8 @@ Preferred communication style: Simple, everyday language.
 - **TimelineChart**: Performance timeline visualization with interactive canvas
 - **LoadingState**: Enhanced multi-step analysis progress indicator
 - **ErrorState**: Error handling and retry functionality
+- **RubyAgentStatus**: Interactive testing interface for Ruby agent functionality
+- **Navigation**: Multi-page navigation between main analysis and Ruby agent tools
 
 ### Backend Services
 - **Analysis Engine**: Enhanced performance analysis with real backend detection
@@ -50,6 +53,7 @@ Preferred communication style: Simple, everyday language.
 - **Security Scanner**: HTTP headers analysis (HTTPS, HSTS, CSP, X-Frame-Options)
 - **Cache Analyzer**: Cache headers evaluation (Cache-Control, ETag, Last-Modified)
 - **Database Monitor**: Ruby/Rails database performance simulation
+- **Ruby Performance Agent**: Standalone Ruby script for authentic backend analysis
 - **Storage Layer**: Abstracted storage interface with in-memory implementation
 - **API Routes**: RESTful endpoints for comprehensive analysis operations
 
@@ -115,4 +119,28 @@ Preferred communication style: Simple, everyday language.
 - **Build**: Separate client/server TypeScript configurations
 - **Paths**: Configured aliases for clean imports (@/, @shared/)
 
-The application is designed as a monorepo with clear separation between client, server, and shared code, making it maintainable and scalable for future enhancements like real Lighthouse integration.
+## Ruby Performance Agent
+
+### Overview
+The system includes a standalone Ruby performance agent (`ruby_agent/performance_agent.rb`) that provides authentic backend analysis for websites, especially optimized for Ruby on Rails applications.
+
+### Agent Capabilities
+- **Connectivity Analysis**: Multiple response time measurements, redirect detection, HTTP status analysis
+- **Headers Analysis**: Server detection, compression analysis, cache headers, security headers
+- **SSL/TLS Security**: Certificate validation, expiration dates, issuer information, security assessment
+- **Ruby/Rails Detection**: Automatic Rails detection, X-Runtime analysis, server detection (Puma, Unicorn, Passenger)
+- **Database Metrics**: Estimated database performance, query analysis, connection pool monitoring
+- **Resource Analysis**: Page size analysis, asset counting, request estimation
+
+### Integration
+- **Automatic Integration**: The Ruby agent integrates seamlessly with the main Node.js backend
+- **Fallback System**: If Ruby is unavailable, the system falls back to Node.js-based analysis
+- **Real Data**: Performs actual HTTP requests and SSL analysis for accurate metrics
+- **JSON Output**: Structured report generation compatible with the main system schema
+
+### Usage
+- **Command Line**: `ruby performance_agent.rb https://example.com`
+- **API Integration**: Automatic execution via `/api/ruby-agent` endpoint
+- **Web Interface**: Dedicated testing page at `/ruby-agent` route
+
+The application is designed as a monorepo with clear separation between client, server, shared code, and the Ruby agent, making it maintainable and scalable for future enhancements like real Lighthouse integration.

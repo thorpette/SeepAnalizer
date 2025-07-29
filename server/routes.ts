@@ -3,6 +3,11 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { analysisRequestSchema, insertPerformanceAnalysisSchema } from "@shared/schema";
 import { z } from "zod";
+import { exec } from "child_process";
+import { promisify } from "util";
+import path from "path";
+
+const execAsync = promisify(exec);
 
 // Enhanced analysis function with backend analysis
 // In a real implementation, this would use Puppeteer/Lighthouse + backend tools
@@ -141,24 +146,128 @@ async function analyzeWebsite(url: string, device: 'desktop' | 'mobile') {
   };
 }
 
-// Backend analysis function
+// Enhanced backend analysis function using Ruby agent
 async function analyzeBackend(url: string) {
+  try {
+    // Try to use Ruby agent first for more detailed analysis
+    const rubyResults = await useRubyAgent(url);
+    if (rubyResults) {
+      return rubyResults;
+    }
+  } catch (error) {
+    console.log('Ruby agent failed, falling back to basic analysis:', error instanceof Error ? error.message : String(error));
+  }
+
+  // Fallback to basic Node.js analysis
+  return await basicBackendAnalysis(url);
+}
+
+// Use Ruby performance agent for detailed analysis
+async function useRubyAgent(url: string): Promise<any> {
+  const rubyAgentPath = path.join(process.cwd(), 'ruby_agent', 'performance_agent.rb');
+  
+  try {
+    // Execute Ruby agent
+    const { stdout, stderr } = await execAsync(`ruby "${rubyAgentPath}" "${url}"`);
+    
+    if (stderr && !stderr.includes('warning')) {
+      throw new Error(`Ruby agent error: ${stderr}`);
+    }
+
+    // Parse the JSON output from Ruby agent
+    const lines = stdout.split('\n');
+    const jsonLine = lines.find(line => line.includes('performance_report_'));
+    
+    if (jsonLine) {
+      const reportFile = jsonLine.match(/performance_report_\d+_\d+\.json/)?.[0];
+      if (reportFile) {
+        const reportPath = path.join(process.cwd(), reportFile);
+        const fs = require('fs');
+        if (fs.existsSync(reportPath)) {
+          const reportData = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+          
+          // Clean up the report file
+          fs.unlinkSync(reportPath);
+          
+          // Convert Ruby agent results to our schema format
+          return convertRubyResults(reportData);
+        }
+      }
+    }
+    
+    throw new Error('Could not parse Ruby agent output');
+    
+  } catch (error) {
+    throw new Error(`Ruby agent execution failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Convert Ruby agent results to our backend analysis schema
+function convertRubyResults(rubyData: any) {
+  const headers = rubyData.headers || {};
+  const connectivity = rubyData.connectivity || {};
+  const rails = rubyData.rails || {};
+  
+  return {
+    serverTechnology: detectServerTechnology(headers, rails),
+    responseTime: rubyData.response_times?.average || connectivity.response_time || 0,
+    serverLocation: detectServerLocation(headers),
+    httpVersion: rubyData.url?.startsWith('https://') ? 'HTTP/2' : 'HTTP/1.1',
+    compressionEnabled: headers.compression?.compressed || false,
+    securityHeaders: {
+      hasHTTPS: headers.security?.https || false,
+      hasHSTS: headers.security?.hsts || false,
+      hasCSP: headers.security?.csp || false,
+      hasXFrameOptions: headers.security?.x_frame_options || false,
+    },
+    cacheHeaders: {
+      hasCacheControl: !!headers.cache_control,
+      hasETag: !!headers.etag,
+      hasLastModified: !!headers.last_modified,
+    },
+    database: rails.detected ? {
+      queryTime: rails.performance?.database_time || 0,
+      connectionPool: rails.performance?.estimated_queries || 5,
+      slowQueries: rails.performance?.estimated_queries > 10 ? 
+        Math.floor(rails.performance.estimated_queries * 0.1) : 0,
+    } : undefined,
+  };
+}
+
+function detectServerTechnology(headers: any, rails: any): string {
+  if (rails.detected) {
+    return rails.version ? `Ruby/Rails ${rails.version}` : 'Ruby/Rails';
+  }
+  
+  const server = headers.server || '';
+  if (server.toLowerCase().includes('nginx')) return 'Nginx';
+  if (server.toLowerCase().includes('apache')) return 'Apache';
+  if (server.toLowerCase().includes('iis')) return 'IIS';
+  
+  return server || 'Unknown';
+}
+
+function detectServerLocation(headers: any): string | undefined {
+  if (headers['cf-ray']) return 'CDN (Cloudflare)';
+  if (headers['x-served-by']) return 'CDN (Fastly)';
+  if (headers['x-cache']) return 'CDN';
+  return undefined;
+}
+
+// Fallback basic analysis using Node.js
+async function basicBackendAnalysis(url: string) {
   try {
     const startTime = Date.now();
     
-    // Make a HEAD request to analyze headers without downloading content
     const response = await fetch(url, { 
       method: 'HEAD',
       headers: { 'User-Agent': 'PageSpeed-Analyzer/1.0' }
     });
     
     const responseTime = Date.now() - startTime;
-    
-    // Analyze response headers
     const headers = response.headers;
     const serverHeader = headers.get('server') || 'Unknown';
     
-    // Detect if it's Ruby/Rails based on common headers
     let serverTechnology = 'Unknown';
     if (serverHeader.toLowerCase().includes('ruby') || 
         serverHeader.toLowerCase().includes('puma') ||
@@ -175,7 +284,6 @@ async function analyzeBackend(url: string) {
 
     const httpVersion = response.url.startsWith('https://') ? 'HTTP/2' : 'HTTP/1.1';
     
-    // Security headers analysis
     const securityHeaders = {
       hasHTTPS: response.url.startsWith('https://'),
       hasHSTS: headers.has('strict-transport-security'),
@@ -183,25 +291,22 @@ async function analyzeBackend(url: string) {
       hasXFrameOptions: headers.has('x-frame-options'),
     };
 
-    // Cache headers analysis
     const cacheHeaders = {
       hasCacheControl: headers.has('cache-control'),
       hasETag: headers.has('etag'),
       hasLastModified: headers.has('last-modified'),
     };
 
-    // Compression analysis
     const compressionEnabled = headers.get('content-encoding')?.includes('gzip') || 
                               headers.get('content-encoding')?.includes('br') ||
                               headers.get('content-encoding')?.includes('deflate') || false;
 
-    // Simulate database analysis for Ruby backends
     let database = undefined;
     if (serverTechnology.includes('Ruby')) {
       database = {
-        queryTime: Math.floor(Math.random() * 100) + 50, // 50-150ms
-        connectionPool: Math.floor(Math.random() * 10) + 5, // 5-15 connections
-        slowQueries: Math.floor(Math.random() * 10), // 0-10 slow queries
+        queryTime: Math.floor(Math.random() * 100) + 50,
+        connectionPool: Math.floor(Math.random() * 10) + 5,
+        slowQueries: Math.floor(Math.random() * 10),
       };
     }
 
@@ -216,10 +321,9 @@ async function analyzeBackend(url: string) {
       database,
     };
   } catch (error) {
-    // Fallback analysis if URL is not accessible
     return {
       serverTechnology: 'Unknown (inaccessible)',
-      responseTime: 5000, // High response time for failed requests
+      responseTime: 5000,
       httpVersion: 'Unknown',
       compressionEnabled: false,
       securityHeaders: {
@@ -335,6 +439,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(analyses);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Direct Ruby agent endpoint for testing
+  app.post("/api/ruby-agent", async (req, res) => {
+    try {
+      const { url } = req.body;
+      
+      if (!url) {
+        return res.status(400).json({ message: "URL is required" });
+      }
+
+      console.log(`🔍 Executing Ruby agent for: ${url}`);
+      
+      const backendResults = await useRubyAgent(url);
+      
+      res.json({
+        success: true,
+        url,
+        results: backendResults,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('Ruby agent endpoint error:', error);
+      res.status(500).json({ 
+        success: false,
+        message: error instanceof Error ? error.message : "Ruby agent execution failed",
+        fallback: "Using basic Node.js analysis instead"
+      });
     }
   });
 

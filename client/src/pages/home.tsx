@@ -41,6 +41,7 @@ export default function Home() {
           <div className="flex items-center space-x-3">
             <Gauge className="text-google-blue text-2xl" size={32} />
             <h1 className="text-2xl font-medium text-gray-900">PageSpeed Analyzer</h1>
+            <span className="text-sm text-gray-500">con Agente Ruby Integrado</span>
           </div>
         </div>
       </header>
