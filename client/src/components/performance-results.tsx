@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import CircularChart from "./circular-chart";
 import MetricsGrid from "./metrics-grid";
 import ResourceDetails from "./resource-details";
+import BackendAnalysis from "./backend-analysis";
 import TimelineChart from "./timeline-chart";
 import Recommendations from "./recommendations";
 
@@ -18,9 +19,9 @@ export default function PerformanceResults({ analysis }: PerformanceResultsProps
   };
 
   const getScoreLabel = (score: number): string => {
-    if (score >= 90) return "Good";
-    if (score >= 50) return "Needs Improvement";
-    return "Poor";
+    if (score >= 90) return "Bueno";
+    if (score >= 50) return "Necesita Mejora";
+    return "Pobre";
   };
 
   const formatDate = (dateString: string): string => {
@@ -40,18 +41,18 @@ export default function PerformanceResults({ analysis }: PerformanceResultsProps
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* Performance Score */}
             <div className="text-center">
-              <div className="relative w-32 h-32 mx-auto mb-4">
+              <div className="relative w-24 h-24 mx-auto mb-4">
                 <CircularChart score={analysis.performanceScore} />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`text-2xl font-bold ${getScoreColor(analysis.performanceScore)}`}>
+                  <span className={`text-xl font-bold ${getScoreColor(analysis.performanceScore)}`}>
                     {analysis.performanceScore}
                   </span>
                 </div>
               </div>
-              <h3 className="font-medium text-gray-900">Performance</h3>
+              <h3 className="font-medium text-gray-900">Rendimiento</h3>
               <p className={`text-sm ${getScoreColor(analysis.performanceScore)}`}>
                 {getScoreLabel(analysis.performanceScore)}
               </p>
@@ -59,15 +60,15 @@ export default function PerformanceResults({ analysis }: PerformanceResultsProps
 
             {/* Accessibility Score */}
             <div className="text-center">
-              <div className="relative w-32 h-32 mx-auto mb-4">
+              <div className="relative w-24 h-24 mx-auto mb-4">
                 <CircularChart score={analysis.accessibilityScore} />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`text-2xl font-bold ${getScoreColor(analysis.accessibilityScore)}`}>
+                  <span className={`text-xl font-bold ${getScoreColor(analysis.accessibilityScore)}`}>
                     {analysis.accessibilityScore}
                   </span>
                 </div>
               </div>
-              <h3 className="font-medium text-gray-900">Accessibility</h3>
+              <h3 className="font-medium text-gray-900">Accesibilidad</h3>
               <p className={`text-sm ${getScoreColor(analysis.accessibilityScore)}`}>
                 {getScoreLabel(analysis.accessibilityScore)}
               </p>
@@ -75,17 +76,33 @@ export default function PerformanceResults({ analysis }: PerformanceResultsProps
 
             {/* Best Practices Score */}
             <div className="text-center">
-              <div className="relative w-32 h-32 mx-auto mb-4">
+              <div className="relative w-24 h-24 mx-auto mb-4">
                 <CircularChart score={analysis.bestPracticesScore} />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`text-2xl font-bold ${getScoreColor(analysis.bestPracticesScore)}`}>
+                  <span className={`text-xl font-bold ${getScoreColor(analysis.bestPracticesScore)}`}>
                     {analysis.bestPracticesScore}
                   </span>
                 </div>
               </div>
-              <h3 className="font-medium text-gray-900">Best Practices</h3>
+              <h3 className="font-medium text-gray-900">Mejores Prácticas</h3>
               <p className={`text-sm ${getScoreColor(analysis.bestPracticesScore)}`}>
                 {getScoreLabel(analysis.bestPracticesScore)}
+              </p>
+            </div>
+
+            {/* SEO Score */}
+            <div className="text-center">
+              <div className="relative w-24 h-24 mx-auto mb-4">
+                <CircularChart score={analysis.seoScore} />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className={`text-xl font-bold ${getScoreColor(analysis.seoScore)}`}>
+                    {analysis.seoScore}
+                  </span>
+                </div>
+              </div>
+              <h3 className="font-medium text-gray-900">SEO</h3>
+              <p className={`text-sm ${getScoreColor(analysis.seoScore)}`}>
+                {getScoreLabel(analysis.seoScore)}
               </p>
             </div>
           </div>
@@ -97,6 +114,9 @@ export default function PerformanceResults({ analysis }: PerformanceResultsProps
 
       {/* Resource Details */}
       <ResourceDetails resourceDetails={analysis.resourceDetails} />
+
+      {/* Backend Analysis */}
+      <BackendAnalysis backendAnalysis={analysis.backendAnalysis} />
 
       {/* Timeline Chart */}
       <TimelineChart timelineData={analysis.timelineData} />

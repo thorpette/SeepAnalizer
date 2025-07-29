@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack web application that provides website performance analysis similar to Google PageSpeed Insights. The application analyzes websites for performance metrics, accessibility, best practices, and SEO scores, providing detailed recommendations for improvement.
+This is a full-stack web application that provides comprehensive website performance analysis similar to Google PageSpeed Insights with enhanced backend analysis capabilities. The application analyzes websites for performance metrics, accessibility, best practices, and SEO scores, while also providing detailed backend server analysis including Ruby/Rails detection, security headers, cache optimization, and database performance metrics.
 
 ## User Preferences
 
@@ -33,26 +33,36 @@ Preferred communication style: Simple, everyday language.
 ## Key Components
 
 ### Frontend Components
-- **UrlAnalysisForm**: Main input form for website analysis requests
-- **PerformanceResults**: Displays comprehensive analysis results
-- **CircularChart**: Custom canvas-based circular progress charts
-- **MetricsGrid**: Performance metrics visualization
-- **Recommendations**: Actionable improvement suggestions
-- **TimelineChart**: Performance timeline visualization
-- **LoadingState**: Analysis progress indicator
+- **UrlAnalysisForm**: Main input form for website analysis requests with device selection
+- **PerformanceResults**: Displays comprehensive analysis results with 4-score layout
+- **CircularChart**: Custom canvas-based circular progress charts for scores
+- **MetricsGrid**: Core Web Vitals metrics visualization (FCP, LCP, TBT, CLS)
+- **BackendAnalysis**: Comprehensive backend server analysis display
+- **ResourceDetails**: Page size, request count, and load time metrics
+- **Recommendations**: Multilingual actionable improvement suggestions
+- **TimelineChart**: Performance timeline visualization with interactive canvas
+- **LoadingState**: Enhanced multi-step analysis progress indicator
 - **ErrorState**: Error handling and retry functionality
 
 ### Backend Services
-- **Analysis Engine**: Mock performance analysis (simulates Lighthouse/Puppeteer)
+- **Analysis Engine**: Enhanced performance analysis with real backend detection
+- **Backend Analyzer**: Real-time server technology detection (Ruby/Rails, Nginx, Apache)
+- **Security Scanner**: HTTP headers analysis (HTTPS, HSTS, CSP, X-Frame-Options)
+- **Cache Analyzer**: Cache headers evaluation (Cache-Control, ETag, Last-Modified)
+- **Database Monitor**: Ruby/Rails database performance simulation
 - **Storage Layer**: Abstracted storage interface with in-memory implementation
-- **API Routes**: RESTful endpoints for analysis operations
+- **API Routes**: RESTful endpoints for comprehensive analysis operations
 
 ### Shared Schema
 - **Performance Analysis Schema**: Comprehensive data structure including:
   - Core web vitals (FCP, LCP, TBT, CLS, Speed Index)
-  - Accessibility, Best Practices, and SEO scores
+  - Accessibility, Best Practices, and SEO scores (4-score layout)
   - Resource details (page size, request count, load time)
-  - Improvement recommendations
+  - **Backend Analysis Schema**: Server technology, response times, security headers
+  - **Database Analysis**: Query performance, connection pools, slow query detection
+  - **Security Headers**: HTTPS, HSTS, CSP, X-Frame-Options analysis
+  - **Cache Headers**: Cache-Control, ETag, Last-Modified evaluation
+  - Multilingual improvement recommendations with impact levels
   - Timeline data for visualization
 
 ## Data Flow

@@ -21,6 +21,29 @@ export const performanceAnalysisSchema = z.object({
     requestCount: z.number(),
     loadTime: z.number(),
   }),
+  backendAnalysis: z.object({
+    serverTechnology: z.string(),
+    responseTime: z.number(),
+    serverLocation: z.string().optional(),
+    httpVersion: z.string(),
+    compressionEnabled: z.boolean(),
+    securityHeaders: z.object({
+      hasHTTPS: z.boolean(),
+      hasHSTS: z.boolean(),
+      hasCSP: z.boolean(),
+      hasXFrameOptions: z.boolean(),
+    }),
+    cacheHeaders: z.object({
+      hasCacheControl: z.boolean(),
+      hasETag: z.boolean(),
+      hasLastModified: z.boolean(),
+    }),
+    database: z.object({
+      queryTime: z.number(),
+      connectionPool: z.number().optional(),
+      slowQueries: z.number(),
+    }).optional(),
+  }),
   recommendations: z.array(z.object({
     id: z.string(),
     title: z.string(),
